@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-　
 import BasicDefinition
 import numpy as np 
 from Agent import Agent
@@ -26,10 +27,46 @@ class Table:
                 handCard = self.deck[0:13]
                 self.deck = self.deck[13::]
                 agent.initialHandCard(handCard)
-    
-    def pickCard(self):
-        return self.deck.pop()
 
+    def gameStart(self):
+        self.currentAgent = random.randint(0,3)
+        newCard = self.pickCard()
+        while True:
+            state ,throwCard = self.agents[self.currentAgent].takeAction(newCard)
+            if state == 'Win' :
+                break
+            ## find who is the next
+            nextAgent = (self.currentAgent+1) % self.MAX_Agent
+            for i in xrange(self.MAX_Agent):
+                if i != self.currentAgent:
+                    tmpState = self.agents[self.currentAgent].check(self.currentAgent,throwCard)
+                    ## priority of 吃 is higher than 槓 
+                    if tmpState == '吃' or (tmpState == '槓' and state != '吃'):
+                        state = tmpState
+                        nextAgent = i
+            
+            self.currentAgent = nextAgent
+            if state == '吃' or state == '槓':
+                newCard = None
+            else :
+                newCard = self.pickCard()
+                ## if deck is empty it means on winner in this round
+                if newCard == None :
+                    state = 'No winner'
+                    break
+
+        if state == 'Win' :
+            print ('The winner is : ',self.currentAgent)
+        elif state == 'No winner' :
+            print (state)
+        
+
+    def pickCard(self):
+        if len(self.deck) != 0:
+            return self.deck.pop()
+        else:
+            return None
+            
     def deckInitial(self):
         self.deck = []
         for i in xrange(34):
@@ -53,5 +90,4 @@ if __name__ == '__main__' :
     for i in xrange(4):
         table.addAgent(f)
     table.deal()
-    print (table.deck)
-    print (len(table.deck))
+    table.gameStart()
