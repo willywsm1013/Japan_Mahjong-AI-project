@@ -39,15 +39,21 @@ class Table:
             nextAgent = (self.currentAgent+1) % self.MAX_Agent
             for i in xrange(self.MAX_Agent):
                 if i != self.currentAgent:
-                    tmpState = self.agents[self.currentAgent].check(self.currentAgent,throwCard)
+                    tmpState,tmpCards= self.agents[self.currentAgent].check(self.currentAgent,throwCard)
                     ## priority of 吃 is higher than 槓 
                     if tmpState == '吃' or (tmpState == '槓' and state != '吃'):
                         state = tmpState
+                        cards = tmpCards
                         nextAgent = i
             
             self.currentAgent = nextAgent
             if state == '吃' or state == '槓':
-                newCard = None
+                assert throwCard != None
+                newCard = throwCard
+                ## broadcast information
+                for i in xrange(self.MAX_Agent):
+                    if i != nextAgent :
+                        self.agents[i].update(nextAgent,cards)
             else :
                 newCard = self.pickCard()
                 ## if deck is empty it means on winner in this round
