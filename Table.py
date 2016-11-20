@@ -30,6 +30,7 @@ class Table:
 
     def gameStart(self):
         self.currentAgent = random.randint(0,3)
+        print 'Agent ',self.currentAgent,' is first!'
         newCard = self.pickCard()
         while True:
             state ,throwCard = self.agents[self.currentAgent].takeAction(newCard)
@@ -40,14 +41,14 @@ class Table:
             for i in xrange(self.MAX_Agent):
                 if i != self.currentAgent:
                     tmpState,tmpCards= self.agents[self.currentAgent].check(self.currentAgent,throwCard)
-                    ## priority of 吃 is higher than 槓 
-                    if tmpState == '吃' or (tmpState == '槓' and state != '吃'):
+                    ## priority of 吃 is higher than 槓 and 碰 
+                    if tmpState == '吃' or ((temState == '碰' or tmpState == '槓') and state != '吃'):
                         state = tmpState
                         cards = tmpCards
                         nextAgent = i
             
             self.currentAgent = nextAgent
-            if state == '吃' or state == '槓':
+            if state == '吃' or state == '槓' or state == '碰':
                 assert throwCard != None
                 newCard = throwCard
                 ## broadcast information
@@ -62,7 +63,7 @@ class Table:
                     break
 
         if state == 'Win' :
-            print ('The winner is : ',self.currentAgent)
+            print 'The winner is : ',self.currentAgent
         elif state == 'No winner' :
             print (state)
         
@@ -88,6 +89,7 @@ class Table:
 '''
     testing part
 '''
+
 def f():
     pass
 if __name__ == '__main__' :
