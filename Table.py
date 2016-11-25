@@ -33,38 +33,84 @@ class Table:
         print 'Agent ',self.currentAgent,' is first!'
         newCard = self.pickCard()
         while True:
-            state ,throwCard = self.agents[self.currentAgent].takeAction(newCard)
-            if state == 'Win' :
+            agent  = self.agents[self.currentAgent]
+            state ,throwCard = agent.takeAction(newCard)
+            assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
+            if state == '胡' :
                 break
             ## find who is the next
             nextAgent = (self.currentAgent+1) % self.MAX_Agent
             for i in xrange(self.MAX_Agent):
                 if i != self.currentAgent:
-                    tmpState,tmpCards= self.agents[self.currentAgent].check(self.currentAgent,throwCard)
-                    ## priority of 吃 is higher than 槓 and 碰 
-                    if tmpState == '吃' or ((temState == '碰' or tmpState == '槓') and state != '吃'):
+                    agent = self.agents[i]
+                    info = agent.check(self.currentAgent,throwCard)
+                    tmpCards = info[0]
+                    tmpState = info[1]
+                    assert throwCard == info[2]
+                    
+                    if tmpState == '過':
+                        continue
+                    
+                    ## 胡 > 碰槓 > 吃
+                    if tmpState == '胡' :
+                        nextAgent = i
+                        cards = tmpCards
+                        state = tmpState
+                        break
+                    if tmpState == '碰':
+                        assert len(tmpCards) == 3,('cards : ',tmpCards,', 碰 should have 3 cards')
+                        assert state != '槓' and state != '碰'
+                        assert self.__cardCheck(tmpCards) == tmpState,('cards :',tmpCards,
+                                                                       ' agent say state is ',tmpState.decode(' utf-8'))
                         state = tmpState
                         cards = tmpCards
                         nextAgent = i
-            
+                    elif tmpState == '槓':
+                        assert len(tmpCards) == 4, ('cards : ',tmpCards,', 槓 should have 4 cards')
+                        assert state != '碰' and state != '槓'
+                        assert self.__cardCheck(tmpCards) == tmpState,('cards :',tmpCards,
+                                                                       ' agent say state is ',tmpState.decode(' utf-8'))
+                        state = tmpState
+                        cards = tmpCards
+                        nextAgent = i
+                    elif tmpState == '吃' and (state != '碰' or state != '槓'):
+                        assert len(tmpCards) == 3,('cards : ',tmpCards,', 吃 should have 3 cards')
+                        assert self.__cardCheck(tmpCards) == tmpState,('cards :',tmpCards,
+                                                                       ' agent say state is ',tmpState.decode('utf-8'))
+                        state = tmpState
+                        cards = tmpCards
+                        nextAgent = i
+                    else :
+                        print ('No define state \'',tmpState,"\'")
+                        sys.exit()
+                                    
             self.currentAgent = nextAgent
-            if state == '吃' or state == '槓' or state == '碰':
-                assert throwCard != None
-                newCard = throwCard
+            
+            if state == '胡':
+                break
+            elif state == '吃' or state == '碰' or state == '槓':
                 ## broadcast information
                 for i in xrange(self.MAX_Agent):
-                    if i != nextAgent :
-                        self.agents[i].update(nextAgent,cards)
+                    self.agents[i].update(nextAgent,[cards,state,throwCard])
+
+                if state == '槓':
+                    newCard = self.pickCard()
+                    if newCard == None :
+                        state = '流局'
+                        break
+                else:
+                    newCard = throwCard
+
             else :
                 newCard = self.pickCard()
                 ## if deck is empty it means on winner in this round
                 if newCard == None :
-                    state = 'No winner'
+                    state = '流局'
                     break
 
-        if state == 'Win' :
+        if state == '胡' :
             print 'The winner is : ',self.currentAgent
-        elif state == 'No winner' :
+        elif state == '流局' :
             print (state)
         
 
@@ -85,7 +131,20 @@ class Table:
 
     def shuffleDeck(self):
         random.shuffle(self.deck)    
-        
+
+    def __cardCheck(self,cards):
+        assert all([(card < 34 and card >= 0) for card in cards])
+        if len(cards) == 4 and len(set(cards)) == 1:
+            return '槓'
+        if len(cards) == 3 and len(set(cards)) == 1:
+            return '碰'
+        if len(cards) == 3 and len(set(cards)) == 3:
+            if all([(card > 0 and card < 10) or (card>10 and card < 20) or (card>20 and card<30) for card in cards]):
+                cards = sorted(cards)
+                if cards[0]+1 == cards[1] and cards[1]+1 == cards[2] :
+                    return '吃'
+
+        return None
 '''
     testing part
 '''
