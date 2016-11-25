@@ -24,12 +24,12 @@ class Agent :
     ###   Get a new card                                                ###
     ###   case 1 : Throw                                                ###
     ###       return state 'Throw' and a card the agent doesn't want    ###
-    ###   case 2 : Win                                                  ###
-    ###       return state 'Win' and None                               ###
+    ###   case 2 : 胡                                                   ###
+    ###       return state '胡' and None                                ###
     #######################################################################
     def takeAction(self,newCard):
         assert newCard != None
-        return 'Win',None
+        return 'Throw',1
 
 
 
@@ -39,7 +39,7 @@ class Agent :
     ###   if return state None, then return cards of None                             ###
     #####################################################################################
     def check(self,agentNum,card): 
-        return None,None
+        return [[],'過',card]
 
 
     #############################################
