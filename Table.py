@@ -35,9 +35,9 @@ class Table:
         while True:
             agent  = self.agents[self.currentAgent]
             state ,throwCard = agent.takeAction(newCard)
-            assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
             if state == '胡' :
                 break
+            assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
             ## find who is the next
             nextAgent = (self.currentAgent+1) % self.MAX_Agent
             for i in xrange(self.MAX_Agent):
