@@ -3,6 +3,7 @@
 class Agent :
     playerNumber = None
     action = None
+    handcard = None
     
     def __init__(self,player_number,action):
         self.playerNumber = player_number
@@ -126,20 +127,32 @@ class Agent :
     ###   check if agent can '吃' or '槓' by card and the agent who throw it          ###
     ###   if return state '吃' or '槓', should return cards that fit this situation   ###
     ###   if return state None, then return cards of None                             ###
+    ###   [[1,2,3],'吃',2]                                                            ###
     #####################################################################################
     def check(self,agentNum,card):
+        self.handcard.append(card)
+        if self.goalTest():
+            return [self.handcard, '胡', card]
+        self.handcard.remove(card)
+
         subtract = self.playNumber - agentNum
+
+        if subtract != 1 and subtract != -3 and handcard.count(card) == 3:
+            return [[card,card,card,card], '槓', card]
+        
         if subtract == 1 or subtract == -3:
             if 1 <= card <= 9 or 11 <= card <= 19 or 21 <= card <=29:
                 if (card - 1 in handcard) and (card + 1 in handcard) and ((card - 1)%10 != 0) and ((card + 1)%10 != 0):
-                    return card - 1, card + 1
+                    return [[card - 1,card,card + 1], '吃', card]
                 elif (card - 2 in handcard) and (card - 1 in handcard) and ((card - 2)%10 != 0) and ((card - 1)%10 != 0):
-                    return card -2, card -1
+                    return [[card -2,card -1,card], '吃', card]
                 elif (card + 1 in handcard) and (card + 2 in handcard) and ((card + 1)%10 != 0) and ((card + 2)%10 != 0):
-                    return card + 1, card +2
+                    return [[card,card + 1,card +2], '吃', card]
+                
         if handcard.count(card) == 2:
-            return card, card
-        return None,None
+            return [[card,card,card], '碰', card]
+        
+        return [[], '過', card]
 
 
     #############################################
