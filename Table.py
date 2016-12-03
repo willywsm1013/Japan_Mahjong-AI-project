@@ -2,6 +2,7 @@
 import BasicDefinition
 import numpy as np 
 from Agent import Agent
+from BasicDefinition import CardIndex
 import random
 class Table:
     MAX_Agent = 4
@@ -34,6 +35,8 @@ class Table:
         newCard = self.pickCard()
         while True:
             agent  = self.agents[self.currentAgent]
+            if newCard != None :
+                print (CardIndex[newCard]) 
             state ,throwCard = agent.takeAction(newCard)
             if state == '胡' :
                 break
@@ -84,7 +87,6 @@ class Table:
                         print ('No define state \'',tmpState,"\'")
                         sys.exit()
                                     
-            self.currentAgent = nextAgent
             
             if state == '胡':
                 break
@@ -95,18 +97,25 @@ class Table:
 
                 if state == '槓':
                     newCard = self.pickCard()
+                    ## if deck is empty it means no winner in this round
                     if newCard == None :
                         state = '流局'
                         break
                 else:
-                    newCard = throwCard
+                    #newCard = throwCard
+                    newCard = None
 
             else :
+                for i in xrange(self.MAX_Agent):
+                    self.agents[i].update(self.currentAgent,[[],'過',throwCard])
+
                 newCard = self.pickCard()
-                ## if deck is empty it means on winner in this round
+                ## if deck is empty it means no winner in this round
                 if newCard == None :
                     state = '流局'
                     break
+            
+            self.currentAgent = nextAgent
 
         if state == '胡' :
             print 'The winner is : ',self.currentAgent
