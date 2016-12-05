@@ -38,5 +38,5 @@ PlayerAction = {'Throw':0,  0:'Throw',
                 }
 
 if __name__=='__main__':
-    print len(CardIndex)
+    print (len(CardIndex))
 
