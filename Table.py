@@ -70,7 +70,10 @@ class Table:
                     
                     ###
                     if verbose : 
-                        print ('Agent ',i,' ',tmpState,' ',tmpCards)
+                        print ('Agent ',i,':',tmpState,end=' [ ')
+                        for card in tmpCards :
+                            print (CardIndex[card],end=',')
+                        print ('\b]')
                         input()
                     ###
                     
