@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-　
-
+from BasicDefinition import CardIndex
 class Agent :
     playerNumber = None
     action = None
@@ -114,11 +114,12 @@ class Agent :
     ###       return state '胡' and None                                ###
     #######################################################################
     def takeAction(self,newCard):
-        self.handcard.append(newCard)
+        if newCard != None :
+            self.handcard.append(newCard)
         if self.goalTest():
             return '胡',None
         else:
-            return 'Throw',None####
+            return 'Throw',self.action(self.handcard)####
 
 
 
@@ -134,21 +135,21 @@ class Agent :
             return [self.handcard, '胡', card]
         self.handcard.remove(card)
 
-        subtract = self.playNumber - agentNum
+        subtract = self.playerNumber - agentNum
 
-        if subtract != 1 and subtract != -3 and handcard.count(card) == 3:
+        if subtract != 1 and subtract != -3 and self.handcard.count(card) == 3:
             return [[card,card,card,card], '槓', card]
         
         if subtract == 1 or subtract == -3:
             if 1 <= card <= 9 or 11 <= card <= 19 or 21 <= card <=29:
-                if (card - 1 in handcard) and (card + 1 in handcard) and ((card - 1)%10 != 0) and ((card + 1)%10 != 0):
+                if (card - 1 in self.handcard) and (card + 1 in self.handcard) and ((card - 1)%10 != 0) and ((card + 1)%10 != 0):
                     return [[card - 1,card,card + 1], '吃', card]
-                elif (card - 2 in handcard) and (card - 1 in handcard) and ((card - 2)%10 != 0) and ((card - 1)%10 != 0):
+                elif (card - 2 in self.handcard) and (card - 1 in self.handcard) and ((card - 2)%10 != 0) and ((card - 1)%10 != 0):
                     return [[card -2,card -1,card], '吃', card]
-                elif (card + 1 in handcard) and (card + 2 in handcard) and ((card + 1)%10 != 0) and ((card + 2)%10 != 0):
+                elif (card + 1 in self.handcard) and (card + 2 in self.handcard) and ((card + 1)%10 != 0) and ((card + 2)%10 != 0):
                     return [[card,card + 1,card +2], '吃', card]
                 
-        if handcard.count(card) == 2:
+        if self.handcard.count(card) == 2:
             return [[card,card,card], '碰', card]
         
         return [[], '過', card]
@@ -159,3 +160,14 @@ class Agent :
     ############################################# 
     def update(self,otherAgent,cards):
         pass
+
+    ###########################
+    ###   print hand card   ###
+    ###########################
+    def printHandCard(self):
+        sortedList = self.handcard[:]
+        sortedList.sort()
+        print ('Agent ',self.playerNumber,end =' :') 
+        for card in sortedList :
+            print (CardIndex[card],end=' ')
+        print ()
