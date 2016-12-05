@@ -4,6 +4,7 @@ import numpy as np
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
+from SimpleAction import RandomAction
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -29,27 +30,49 @@ class Table:
                 self.deck = self.deck[13::]
                 agent.initialHandCard(handCard)
 
-    def gameStart(self):
+    def gameStart(self,verbose = False):
+        print ('Game start !')
         self.currentAgent = random.randint(0,3)
-        print 'Agent ',self.currentAgent,' is first!'
+        print ('Agent ',self.currentAgent,' is first!')
+        print ('-------------------------------------')
         newCard = self.pickCard()
         while True:
+            ###
+            if verbose :
+                
+                print ('current handcards for every agent :')
+                for agent in self.agents :
+                    agent.printHandCard()
+                print ("\nAgent ",self.currentAgent,"'s action")
+            ###
+            
             agent  = self.agents[self.currentAgent]
             if newCard != None :
-                print (CardIndex[newCard]) 
+                print ('get ',CardIndex[newCard]) 
             state ,throwCard = agent.takeAction(newCard)
+            
+            ###
+            if verbose : print ('Throw ',CardIndex[throwCard])
+            ###
+            
             if state == '胡' :
                 break
             assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
             ## find who is the next
             nextAgent = (self.currentAgent+1) % self.MAX_Agent
-            for i in xrange(self.MAX_Agent):
+            for i in range(self.MAX_Agent):
                 if i != self.currentAgent:
                     agent = self.agents[i]
                     info = agent.check(self.currentAgent,throwCard)
                     tmpCards = info[0]
                     tmpState = info[1]
                     assert throwCard == info[2]
+                    
+                    ###
+                    if verbose : 
+                        print ('Agent ',i,' ',tmpState,' ',tmpCards)
+                        input()
+                    ###
                     
                     if tmpState == '過':
                         continue
@@ -86,13 +109,14 @@ class Table:
                     else :
                         print ('No define state \'',tmpState,"\'")
                         sys.exit()
-                                    
-            
+                                     
             if state == '胡':
                 break
             elif state == '吃' or state == '碰' or state == '槓':
+                if verbose :
+                    print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
                 ## broadcast information
-                for i in xrange(self.MAX_Agent):
+                for i in range(self.MAX_Agent):
                     self.agents[i].update(nextAgent,[cards,state,throwCard])
 
                 if state == '槓':
@@ -106,7 +130,9 @@ class Table:
                     newCard = None
 
             else :
-                for i in xrange(self.MAX_Agent):
+                if verbose:
+                    print ('No agnet get ',CardIndex[throwCard])
+                for i in range(self.MAX_Agent):
                     self.agents[i].update(self.currentAgent,[[],'過',throwCard])
 
                 newCard = self.pickCard()
@@ -116,9 +142,10 @@ class Table:
                     break
             
             self.currentAgent = nextAgent
+            print ('-------------------------------------')
 
         if state == '胡' :
-            print 'The winner is : ',self.currentAgent
+            print ('The winner is : ',self.currentAgent)
         elif state == '流局' :
             print (state)
         
@@ -131,7 +158,7 @@ class Table:
             
     def deckInitial(self):
         self.deck = []
-        for i in xrange(34):
+        for i in range(34):
             if i < 34 :
                 self.deck.append([i]*4)    
             else :
@@ -163,7 +190,7 @@ def f():
 if __name__ == '__main__' :
     table = Table()
     table.newGame()
-    for i in xrange(4):
-        table.addAgent(f)
+    for i in range(4):
+        table.addAgent(RandomAction)
     table.deal()
-    table.gameStart()
+    table.gameStart(True)
