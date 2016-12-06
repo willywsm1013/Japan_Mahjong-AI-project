@@ -1,14 +1,17 @@
 #-*- coding: utf-8 -*-　
 from BasicDefinition import CardIndex
 class Agent :
-    playerNumber = None
-    action = None
-    handcard = None
-    
+   
+	
     def __init__(self,player_number,action):
+        #playerNumber = None
+        #action = None
+        self.handcard = None
+        self.cardsOnBoard = [[],[],[],[]]
+        self.cardsThrowed = [[],[],[],[]]
         self.playerNumber = player_number
         self.action = action
-    
+
     def goalTest(self):
         s1 = []    #distinguish 4 color
         s2 = []
@@ -157,9 +160,25 @@ class Agent :
 
     #############################################
     ###   update other player's information   ###
+	###	  Example:                            ###
+	###      1 throw 東（30)                   ###
+	###      2 get   東  say "碰"              ###
+	###      update(1,2,[30,30,30],30)        ###
     ############################################# 
-    def update(self,otherAgent,cards):
-        pass
+    def update(self,throwAgent,takeAgent,cards,throwCard):
+        self.cardsThrowed[throwAgent].append(throwCard)
+        if takeAgent!=None:            
+            self.cardsOnBoard[takeAgent].append(cards)
+            if takeAgent==self.playerNumber:
+                self.handcard.append(throwCard)
+                for card in cards:
+                    print ("handcard",self.handcard)
+                    self.handcard.remove(card)
+
+        print ("throwAgent ",throwAgent, "throwcard ", throwCard)
+        print ("list of cards throw :",self.cardsThrowed)
+        print ("takeAgent, ",takeAgent)
+        print ("list of cards agents take , ", self.cardsOnBoard)
 
     ###########################
     ###   print hand card   ###
