@@ -64,9 +64,9 @@ class Table:
                 if i != self.currentAgent:
                     agent = self.agents[i]
                     info = agent.check(self.currentAgent,throwCard)
-                    tmpCards = info[0]
-                    tmpState = info[1]
-                    assert throwCard == info[2]
+                    tmpCards = info[0]#[1 1 1]
+                    tmpState = info[1]#'吃'、'碰'、'槓'
+                    assert throwCard == info[2]#丟出來的那張
                     
                     ###
                     if verbose : 
@@ -112,38 +112,40 @@ class Table:
                     else :
                         print ('No define state \'',tmpState,"\'")
                         sys.exit()
-                                     
+            
+            
             if state == '胡':
                 break
-            elif state == '吃' or state == '碰' or state == '槓':
+			            
+            if state == '吃' or state == '碰' or state == '槓':
                 if verbose :
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
-                ## broadcast information
-                for i in range(self.MAX_Agent):
-                    self.agents[i].update(nextAgent,[cards,state,throwCard])
-
+                takeAgent = nextAgent            
+                takeCards = cards                
                 if state == '槓':
                     newCard = self.pickCard()
                     ## if deck is empty it means no winner in this round
                     if newCard == None :
                         state = '流局'
                         break
-                else:
+                    else:
                     #newCard = throwCard
-                    newCard = None
+                        newCard = None
 
             else :
                 if verbose:
                     print ('No agnet get ',CardIndex[throwCard])
-                for i in range(self.MAX_Agent):
-                    self.agents[i].update(self.currentAgent,[[],'過',throwCard])
-
+                takeAgent = None
+                takeCards = None
                 newCard = self.pickCard()
                 ## if deck is empty it means no winner in this round
                 if newCard == None :
                     state = '流局'
                     break
-            
+
+            ## broadcast information
+            for i in range(self.MAX_Agent):
+                self.agents[i].update(self.currentAgent,takeAgent,takeCards,throwCard)
             self.currentAgent = nextAgent
             print ('-------------------------------------')
 
