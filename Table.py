@@ -128,9 +128,9 @@ class Table:
                     if newCard == None :
                         state = '流局'
                         break
-                else:
+                    else:
                     #newCard = throwCard
-                    newCard = None
+                        newCard = None
 
             else :
                 if verbose:
