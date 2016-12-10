@@ -4,7 +4,7 @@ import numpy as np
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
-from SimpleAction import RandomAction
+from SimpleAction import RandomAction,HumanAction
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -12,7 +12,7 @@ class Table:
     def newGame(self) :
         self.agents = []
         self.deckInitial()
-
+        self.throwedCards=[[],[],[],[]]
     def addAgent(self,action):
         if len(self.agents) < self.MAX_Agent :
             self.agents.append(Agent(len(self.agents),action))
@@ -30,38 +30,45 @@ class Table:
                 self.deck = self.deck[13::]
                 agent.initialHandCard(handCard)
 
-    def gameStart(self,verbose = False):
+    def gameStart(self,verbose = False,pretty=False):
         print ('Game start !')
         self.currentAgent = random.randint(0,3)
         print ('Agent ',self.currentAgent,' is first!')
         print ('-------------------------------------')
         newCard = self.pickCard()
         while True:
+            table = None
             ###
             if verbose :
                 
                 print ('current handcards for every agent :')
-                self.__getVisibleTable()
-                '''
                 for agent in self.agents :
                     agent.printHandCard()
-                '''
                 
-                input()
+                if pretty:
+                    table = self.__getVisibleTable()
+                    self.__addToken(table,self.currentAgent)
+                    if self.currentAgent!=3:
+                        for row in table:
+                            print ('|'.join(map(str,row)))
+
+                #input()
                 print ("\nAgent ",self.currentAgent,"'s action")
             ###
             
             agent  = self.agents[self.currentAgent]
             if newCard != None :
                 print ('get ',CardIndex[newCard]) 
-            state ,throwCard = agent.takeAction(newCard)
+            state ,throwCard = agent.takeAction(newCard,table)
+            self.throwedCards[throwCard]-=1
+                        
+            if state == '胡' :
+                break
             
             ###
             if verbose : print ('Throw ',CardIndex[throwCard])
             ###
-            
-            if state == '胡' :
-                break
+
             assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
             ## find who is the next
             nextAgent = (self.currentAgent+1) % self.MAX_Agent
@@ -127,7 +134,15 @@ class Table:
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
                 takeAgent = nextAgent            
                 takeCards = cards                
-                if state == '槓':
+
+                if state == '吃':
+                    for i in cards:
+                        if i != throwCard:
+                            self.throwedCards[i]-=1
+                elif state == '碰':
+                    self.throwedCards[throwCard]-=2 
+                elif state == '槓':
+                    self.throwedCards[throwCard]=0
                     newCard = self.pickCard()
                     ## if deck is empty it means no winner in this round
                     if newCard == None :
@@ -194,12 +209,26 @@ class Table:
 
     def __getVisibleTable(self):
         visibleTable=[]
-        visibleTable.append(['     ','-'*55,'     '])
+        visibleTable.append(['*'*69])
+        for i in range(11):
+            visibleTable.append([])
+        for i in range(34):
+            card = CardIndex[i]
+            if i < 30:
+                if len(card)==2:
+                    visibleTable[1+i%10].append(card+':'+str(self.throwedCards[i])+' ')
+                else:
+                    visibleTable[1+i%10].append(' '+card+' :'+str(self.throwedCards[i])+' ')
+            else:
+                visibleTable[11].append(' '+card+' :'+str(self.throwedCards[i])+' ')
+        visibleTable.append(['*'*69])
+        visibleTable.append([' '*69])
+        visibleTable.append(['      ','-'*55,'      '])
         ### get agent 1's cards on board 
         cards = self.agents[1].getCardsOnBoard()
         cards = sum(cards,[])
-        r1 = ['     ']
-        r2 = ['     ']
+        r1 = ['      ']
+        r2 = ['      ']
         for card in cards :
             chinese = CardIndex[card]
             r1.append(chinese[0])
@@ -217,7 +246,7 @@ class Table:
         cards = self.agents[2].getCardsOnBoard()
         cards = sum(cards,[])
         for i in range(16) :
-            r = ['']
+            r = [' ']
             if i < len(cards) :
                 card = CardIndex[cards[i]]
                 if len(card) == 1:
@@ -237,35 +266,48 @@ class Table:
             if i < len(cards) :
                 card = CardIndex[cards[i]]
                 if len(card) == 1:
-                    visibleTable[i+4].append(card.center(3))
+                    visibleTable[i+18].append(card.center(3))
                 else:
-                    visibleTable[i+4].append(card)
+                    visibleTable[i+18].append(card)
 
             else :
-                visibleTable[i+4][-1] += ' '*5 
-            visibleTable[i+4].append('')
+                visibleTable[i+18][-1] += ' '*5 
+            visibleTable[i+18].append('')
         ### get agent 3's cards on board
         cards = self.agents[3].getCardsOnBoard()
         cards = sum(cards,[])
-        r1 = ['     ']
-        r2 = ['     ']
+        r1 = ['      ']
+        r2 = ['      ']
         for card in cards :
             chinese = CardIndex[card]
             if len(chinese) == 2:
                 r1.append(chinese[0])
                 r2.append(chinese[1])
             else :
-                r1.append(' ')
+                r1.append('  ')
                 r2.append(chinese[0])
         if len(cards)!=0:
             r1.append('')
             r2.append('')
         visibleTable.append(r1)
         visibleTable.append(r2)
-        visibleTable.append(['     ','-'*55,'     '])
+        visibleTable.append(['      ','-'*55,'      '])
+        visibleTable.append([' '*69])
+        
+        return visibleTable
 
-        for row in visibleTable:
-            print ('|'.join(map(str,row)))
+    def __addToken(self,table,token):
+        if token == 0:
+            table[13][-1]='o'
+        elif token == 1:
+            space = int(len(table[0][0])/2)
+            table[0][0]=' '*space+'o'+' '*space
+        elif token == 2:
+            table[13][0]='o'
+        elif token == 3:
+            space = int(len(table[0][0])/2)
+            table[-1][0]=' '*space+'o'+' '*space
+
 '''
     testing part
 '''
@@ -275,7 +317,8 @@ def f():
 if __name__ == '__main__' :
     table = Table()
     table.newGame()
-    for i in range(4):
+    for i in range(3):
         table.addAgent(RandomAction)
+    table.addAgent(HumanAction)
     table.deal()
-    table.gameStart(True)
+    table.gameStart(True,True)

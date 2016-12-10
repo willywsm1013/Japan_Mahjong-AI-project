@@ -27,8 +27,7 @@ class Agent :
                 s3.append(card)
             else:
                 s4.append(card)
-        s = [s1,s2,s3]
-        
+        s = [s1,s2,s3]  
         twoPair = 0
         while len(s4) != 0:
             count = s4.count(s4[0])
@@ -116,13 +115,13 @@ class Agent :
     ###   case 2 : 胡                                                   ###
     ###       return state '胡' and None                                ###
     #######################################################################
-    def takeAction(self,newCard):
+    def takeAction(self,newCard,table):
         if newCard != None :
             self.handcard.append(newCard)
         if self.goalTest():
             return '胡',None
         else:
-            return 'Throw',self.action(self.handcard)####
+            return 'Throw',self.action(self.handcard,table)####
 
 
 
@@ -172,13 +171,13 @@ class Agent :
             if takeAgent==self.playerNumber:
                 self.handcard.append(throwCard)
                 for card in cards:
-                    print ("handcard",self.handcard)
+                    #print ("handcard",self.handcard)
                     self.handcard.remove(card)
 
-        print ("throwAgent ",throwAgent, "throwcard ", throwCard)
-        print ("list of cards throw :",self.cardsThrowed)
-        print ("takeAgent, ",takeAgent)
-        print ("list of cards agents take , ", self.cardsOnBoard)
+        #print ("throwAgent ",throwAgent, "throwcard ", throwCard)
+        #print ("list of cards throw :",self.cardsThrowed)
+        #print ("takeAgent, ",takeAgent)
+        #print ("list of cards agents take , ", self.cardsOnBoard)
 
     ###########################
     ###   print hand card   ###
