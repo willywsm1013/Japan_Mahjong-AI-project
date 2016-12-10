@@ -18,6 +18,7 @@ class Agent :
         s3 = []
         s4 = []
         self.handcard.sort()
+        combination = []
         for card in self.handcard:
             if 1 <= card <= 9:
                 s1.append(card)
@@ -33,44 +34,54 @@ class Agent :
         while len(s4) != 0:
             count = s4.count(s4[0])
             if count == 3:
+                combination.append([s4[0]]*3)
                 s4 = s4[3:]
             elif count == 2:
                 if twoPair == 0:
                     twoPair += 1
+                    combination.append([s4[0]]*2)
                     s4 = s4[2:]
                 else:
-                    return False
+                    return False,None
             else:
-                return False
+                return False,None
                 
         for color in s:
             if len(color) != 0:
+                ## 整除
                 if len(color) % 3 == 0:
                     while len(color) != 0:
                         first = color[0]
+                        ## 檢查碰
                         if color[1] == first:
                             if color[2] == first:
                                 color = color[3:]
+                                combination.append([first]*3)
                             else:
-                                return False
+                                return False,None
+                        ## 檢查順子
                         elif color[1] == first + 1:
                             if first + 2 in color:
                                 color.remove(first + 2)
                                 color = color[2:]
+                                combination.append([first,first+1,first+2])
                             else:
-                                return False
+                                return False,None
                         else:
-                            return False
+                            return False,None
+                ## 可能有pair
                 elif len(color) % 3 == 2:
                     if twoPair != 0:
-                        return False
+                        return False,None
                     else:
                         i = 0
                         correct1 = False
                         while i < len(color):
                             count = color.count(color[i])
+                            ## 某類牌有2 3 4張在手上
                             if count > 1:
                                 temp = color
+                                tempCombination = [[temp[i]]*2]
                                 del temp[i:i+2]
                                 correct2 = True
                                 while len(temp) != 0:
@@ -78,6 +89,7 @@ class Agent :
                                     if temp[1] == first:
                                         if temp[2] == first:
                                             temp = temp[3:]
+                                            tempCombination.append([first*3])
                                         else:
                                             correct2 = False
                                             break
@@ -85,6 +97,7 @@ class Agent :
                                         if first + 2 in temp:
                                             temp.remove(first + 2)
                                             temp = temp[2:]
+                                            tempCombination.append([first,first+1,first+2])
                                         else:
                                             correct2 = False
                                             break
@@ -96,10 +109,11 @@ class Agent :
                                     break
                             i +=count
                         if not correct1:
-                            return False
+                            return False,None
+                        combination = combination + tempCombination
                 else:
-                    return False
-        return True
+                    return False,None
+        return True,combination
     
     ##########################################################
     ###   initial the first 13 hand card in the begining   ###
@@ -119,8 +133,12 @@ class Agent :
     def takeAction(self,newCard):
         if newCard != None :
             self.handcard.append(newCard)
-        if self.goalTest():
-            return '胡',None
+        
+        result,cardCombination = self.goalTest()
+        
+        assert result or cardCombination == None
+        if result:
+            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
             return 'Throw',self.action(self.handcard)####
 
@@ -134,8 +152,9 @@ class Agent :
     #####################################################################################
     def check(self,agentNum,card):
         self.handcard.append(card)
-        if self.goalTest():
-            return [self.handcard, '胡', card]
+        result,cardCombination = self.goalTest()
+        if result:
+            return [cardCombination+self.cardsOnBoard[self.playerNumber], '胡', card]
         self.handcard.remove(card)
 
         subtract = self.playerNumber - agentNum
