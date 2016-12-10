@@ -51,12 +51,22 @@ class Table:
                 print ('get ',CardIndex[newCard]) 
             state ,throwCard = agent.takeAction(newCard)
             
+                       
+            if state == '自摸' : 
+                if verbose :
+                    print ('Agent ',i,':',state,end=' [ ')
+                    for cards in throwCard:
+                        print ('[ ',end='')
+                        for card in cards:
+                            print (CardIndex[card],end=',')
+                        print ('\b],',end='')
+                    print ('\b]')
+                break
+            
             ###
             if verbose : print ('Throw ',CardIndex[throwCard])
             ###
-            
-            if state == '胡' :
-                break
+
             assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
             ## find who is the next
             nextAgent = (self.currentAgent+1) % self.MAX_Agent
@@ -71,10 +81,17 @@ class Table:
                     ###
                     if verbose : 
                         print ('Agent ',i,':',tmpState,end=' [ ')
-                        for card in tmpCards :
-                            print (CardIndex[card],end=',')
+                        if tmpState == '胡':
+                            for cards in tmpCards:
+                                print ('[ ',end='')
+                                for card in cards:
+                                    print (CardIndex[card],end=',')
+                                print ('\b],',end='')
+                        else:
+                            for card in tmpCards :
+                                print (CardIndex[card],end=',')
                         print ('\b]')
-                        input()
+                        #input()
                     ###
                     
                     if tmpState == '過':
@@ -115,6 +132,8 @@ class Table:
             
             
             if state == '胡':
+                winAgent = nextAgent
+                loseAgent = self.currentAgent
                 break
 			            
             if state == '吃' or state == '碰' or state == '槓':
@@ -150,7 +169,10 @@ class Table:
             print ('-------------------------------------')
 
         if state == '胡' :
-            print ('The winner is : ',self.currentAgent)
+            print ('贏家 : ',winAgent)
+            print ('放槍 : ',loseAgent)
+        elif state == '自摸':
+            print (self.currentAgent,'自摸')
         elif state == '流局' :
             print (state)
         
