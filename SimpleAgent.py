@@ -1,6 +1,10 @@
 #-*- coding: utf-8 -*-　
 import random
 from Agent import Agent
+
+########################
+###   Random Agent   ###
+########################
 class RandomAgent(Agent):
     def __init__(self,player_number):
         self.handcard = None
@@ -17,8 +21,12 @@ class RandomAgent(Agent):
         if result:
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
-            return 'Throw',self.randomAction(self.handcard)####
+            return 'Throw',self.randomAction()
 
-    def randomAction(self,handCards):
-        return handCards.pop(random.randrange(len(handCards)))
+    def randomAction(self):
+        return self.handcard.pop(random.randrange(len(self.handcard)))
+
+
 #def RandomAction(handCards):
+            
+
