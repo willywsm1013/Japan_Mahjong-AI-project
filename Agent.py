@@ -91,7 +91,7 @@ class Agent :
                                     if temp[1] == first:
                                         if temp[2] == first:
                                             temp = temp[3:]
-                                            tempCombination.append([first*3])
+                                            tempCombination.append([first]*3)
                                         else:
                                             correct2 = False
                                             break
@@ -243,28 +243,12 @@ class Agent :
     def xiangtingshu(self, handcard):
         xiangtingshuInfo = mahjong.xiangtingshu_output(self.cardTransform(handcard))
         #[[11, 0, [15]], [14, 0, [16, 19]], ...] means [打1條,向聽數0,有效牌5條]，[打4條,向聽數0,有效牌6條9條]，...
-        print (xiangtingshuInfo)
+        #print (xiangtingshuInfo)
         for case in xiangtingshuInfo:
             youxiaopaiNum = 0
             for card in case[2]:
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
+                assert youxiaopaiNum >= 0
             case.append(youxiaopaiNum)
 
         return xiangtingshuInfo
-
-        
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
