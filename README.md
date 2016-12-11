@@ -1,7 +1,7 @@
 Update History :
 v.1.1 (2016.12.11)
 1. agent胡牌或自摸時會回傳牌型
-
+2. 可計算向聽數
 v.1.0 (2016.12.7 )
 1. 麻將桌初步實作完成
 2. 只有random action的agent
