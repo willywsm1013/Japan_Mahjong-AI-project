@@ -4,7 +4,7 @@ import numpy as np
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
-from SimpleAction import RandomAgent
+from SimpleAgent import RandomAgent,OneStepAgent
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -82,6 +82,7 @@ class Table:
                     if verbose : 
                         print ('Agent ',i,':',tmpState,end=' [ ')
                         if tmpState == '胡':
+                            print (tmpCards)
                             for cards in tmpCards:
                                 print ('[ ',end='')
                                 for card in cards:
@@ -171,10 +172,15 @@ class Table:
         if state == '胡' :
             print ('贏家 : ',winAgent)
             print ('放槍 : ',loseAgent)
+            return winAgent
         elif state == '自摸':
             print (self.currentAgent,'自摸')
+            return self.currentAgent
         elif state == '流局' :
             print (state)
+            return None
+        else:
+            assert 0==1
         
 
     def pickCard(self):
@@ -216,8 +222,15 @@ def f():
     pass
 if __name__ == '__main__' :
     table = Table()
-    table.newGame()
-    for i in range(4):
-        table.addAgent(RandomAgent(i))
-    table.deal()
-    table.gameStart(True)
+    record = [0]*4
+    repeat = 100.0
+    for time in range(int(repeat)):
+        table.newGame()
+        for i in range(3):
+            table.addAgent(OneStepAgent(i))
+        table.addAgent(OneStepAgent(3))
+        table.deal()
+        winner = table.gameStart(True)
+        if winner != None:
+            record[winner]+=1
+    print (record)
