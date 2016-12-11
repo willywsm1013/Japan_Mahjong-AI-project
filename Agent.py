@@ -139,6 +139,7 @@ class Agent :
         result,cardCombination = self.goalTest()
         
         assert result or cardCombination == None
+        
         if result:
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
@@ -242,10 +243,10 @@ class Agent :
     def xiangtingshu(self, handcard):
         xiangtingshuInfo = mahjong.xiangtingshu_output(self.cardTransform(handcard))
         #[[11, 0, [15]], [14, 0, [16, 19]], ...] means [打1條,向聽數0,有效牌5條]，[打4條,向聽數0,有效牌6條9條]，...
-
+        print (xiangtingshuInfo)
         for case in xiangtingshuInfo:
             youxiaopaiNum = 0
-            for card in case[3]:
+            for card in case[2]:
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
             case.append(youxiaopaiNum)
 
