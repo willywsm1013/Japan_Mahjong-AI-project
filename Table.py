@@ -4,7 +4,7 @@ import numpy as np
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
-from SimpleAction import RandomAction
+from SimpleAction import RandomAgent
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -13,9 +13,9 @@ class Table:
         self.agents = []
         self.deckInitial()
 
-    def addAgent(self,action):
+    def addAgent(self,newAgent):
         if len(self.agents) < self.MAX_Agent :
-            self.agents.append(Agent(len(self.agents),action))
+            self.agents.append(newAgent)
         else :
             print ('Agent reach the maximum agent number!')
     
@@ -218,6 +218,6 @@ if __name__ == '__main__' :
     table = Table()
     table.newGame()
     for i in range(4):
-        table.addAgent(RandomAction)
+        table.addAgent(RandomAgent(i))
     table.deal()
     table.gameStart(True)
