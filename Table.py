@@ -1,10 +1,12 @@
 #-*- coding: utf-8 -*-　
 import BasicDefinition
 import numpy as np 
+from six.moves import cPickle
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
 from SimpleAgent import RandomAgent,OneStepAgent
+
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -94,7 +96,7 @@ class Table:
                         print ('\b]')
                         #input()
                     ###
-                    
+                    assert self.__cardChecker(tmpCards,tmpState) 
                     if tmpState == '過':
                         continue
                     
@@ -105,25 +107,16 @@ class Table:
                         state = tmpState
                         break
                     if tmpState == '碰':
-                        assert len(tmpCards) == 3,('cards : ',tmpCards,', 碰 should have 3 cards')
                         assert state != '槓' and state != '碰'
-                        assert self.__cardCheck(tmpCards) == tmpState,('cards :',tmpCards,
-                                                                       ' agent say state is ',tmpState.decode(' utf-8'))
                         state = tmpState
                         cards = tmpCards
                         nextAgent = i
                     elif tmpState == '槓':
-                        assert len(tmpCards) == 4, ('cards : ',tmpCards,', 槓 should have 4 cards')
                         assert state != '碰' and state != '槓'
-                        assert self.__cardCheck(tmpCards) == tmpState,('cards :',tmpCards,
-                                                                       ' agent say state is ',tmpState.decode(' utf-8'))
                         state = tmpState
                         cards = tmpCards
                         nextAgent = i
                     elif tmpState == '吃' and (state != '碰' or state != '槓'):
-                        assert len(tmpCards) == 3,('cards : ',tmpCards,', 吃 should have 3 cards')
-                        assert self.__cardCheck(tmpCards) == tmpState,('cards :',tmpCards,
-                                                                       ' agent say state is ',tmpState.decode('utf-8'))
                         state = tmpState
                         cards = tmpCards
                         nextAgent = i
@@ -201,19 +194,49 @@ class Table:
     def shuffleDeck(self):
         random.shuffle(self.deck)    
 
-    def __cardCheck(self,cards):
-        assert all([(card < 34 and card >= 0) for card in cards])
-        if len(cards) == 4 and len(set(cards)) == 1:
-            return '槓'
-        if len(cards) == 3 and len(set(cards)) == 1:
-            return '碰'
-        if len(cards) == 3 and len(set(cards)) == 3:
+    def __cardChecker(self,cards,state):
+        if state != '胡':
+            assert all([(card < 34 and card >= 0) for card in cards])
+        error = True
+        if len(cards)==0 and state == '過':
+            error=False
+        elif len(cards) == 4 and len(set(cards)) == 1 and state == '槓':
+            error = False
+        elif len(cards) == 3 and len(set(cards)) == 1 and state == '碰':
+            error = False
+        elif len(cards) == 3 and len(set(cards)) == 3:
             if all([(card > 0 and card < 10) or (card>10 and card < 20) or (card>20 and card<30) for card in cards]):
                 cards = sorted(cards)
                 if cards[0]+1 == cards[1] and cards[1]+1 == cards[2] :
-                    return '吃'
+                    error=False
+        elif state=='胡' and len(cards)>=5:
+            error = False
+            for card in cards:
+                if len(card)==2 and card[0]==card[1]:
+                    pass
+                elif len(card)==3:
+                    cardLen = len(set(card))
+                    if cardLen==3 and card[0]+1==card[1] and card[1]+1==card[2]:
+                        pass
+                    elif cardLen == 1:
+                        pass
+                    else:
+                        error=True
+                        break
+                elif len(card)==4 and len(set(card))==1:
+                    pass
+                else :
+                    error=True
+                    break
+        else :
+            print (cards)
+            print (state)
+            assert 0==1
+        if error :
+            print ('state : ',state,', cards : ',cards)
+            print ('card Checkerror')
 
-        return None
+        return not error
 '''
     testing part
 '''
@@ -227,7 +250,7 @@ if __name__ == '__main__' :
     for time in range(int(repeat)):
         table.newGame()
         for i in range(3):
-            table.addAgent(OneStepAgent(i))
+            table.addAgent(RandomAgent(i))
         table.addAgent(OneStepAgent(3))
         table.deal()
         winner = table.gameStart(True)
