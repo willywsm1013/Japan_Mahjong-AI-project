@@ -1,10 +1,11 @@
 #-*- coding: utf-8 -*-　
 from BasicDefinition import CardIndex
+from SimpleAction import RandomAction
 import mahjong
 class Agent :
    
 	
-    def __init__(self,player_number,action):
+    def __init__(self,player_number,action=RandomAction):
         #playerNumber = None
         #action = None
         self.handcard = None
@@ -81,7 +82,7 @@ class Agent :
                             count = color.count(color[i])
                             ## 某類牌有2 3 4張在手上
                             if count > 1:
-                                temp = color
+                                temp = color[:]
                                 tempCombination = [[temp[i]]*2]
                                 del temp[i:i+2]
                                 correct2 = True
@@ -131,7 +132,7 @@ class Agent :
     ###   case 2 : 胡                                                   ###
     ###       return state '胡' and None                                ###
     #######################################################################
-    def takeAction(self,newCard,table):
+    def takeAction(self,newCard,table=None):
         if newCard != None :
             self.handcard.append(newCard)
         
@@ -201,11 +202,11 @@ class Agent :
                 self.cardOpened.append(card)
         else:
             self.cardOpened.append(throwCard)
-
-        #print ("throwAgent ",throwAgent, "throwcard ", throwCard)
-        #print ("list of cards throw :",self.cardsThrowed)
+        print ('Agent ',self.playerNumber)
+        print ("    throwAgent ",throwAgent, "throwcard ", CardIndex[throwCard])
+        print ("    list of cards throw :",self.cardsThrowed[self.playerNumber])
         #print ("takeAgent, ",takeAgent)
-        #print ("list of cards agents take , ", self.cardsOnBoard)
+        print ("    list of cards agents take , ", self.cardsOnBoard[self.playerNumber])
 
     ###########################
     ###   print hand card   ###
@@ -224,6 +225,8 @@ class Agent :
     def getCardsOnBoard(self):
         return self.cardsOnBoard[self.playerNumber] 
     
+    def getCardsThrowed(self):
+        return self.cardsThrowed[self.playerNumber]
     ##################################
     ###   calculate xiangtingshu   ###
     ##################################
