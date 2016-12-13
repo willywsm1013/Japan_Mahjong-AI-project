@@ -4,6 +4,7 @@ import numpy as np
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
+import getScore
 from SimpleAction import RandomAction
 class Table:
     MAX_Agent = 4
