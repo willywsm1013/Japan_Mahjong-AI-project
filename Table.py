@@ -4,7 +4,7 @@ import numpy as np
 from Agent import Agent
 from BasicDefinition import CardIndex
 import random
-from SimpleAction import RandomAction,HumanAction
+from SimpleAgent import RandomAgent,OneStepAgent
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -13,9 +13,10 @@ class Table:
         self.agents = []
         self.deckInitial()
         self.throwedCards=[[],[],[],[]]
-    def addAgent(self,action):
+
+    def addAgent(self,newAgent):
         if len(self.agents) < self.MAX_Agent :
-            self.agents.append(Agent(len(self.agents),action))
+            self.agents.append(newAgent)
         else :
             print ('Agent reach the maximum agent number!')
     
@@ -65,6 +66,18 @@ class Table:
             if state == '胡' :
                 break
             
+                       
+            if state == '自摸' : 
+                if verbose :
+                    print ('Agent ',i,':',state,end=' [ ')
+                    for cards in throwCard:
+                        print ('[ ',end='')
+                        for card in cards:
+                            print (CardIndex[card],end=',')
+                        print ('\b],',end='')
+                    print ('\b]')
+                break
+            
             ###
             if verbose : print ('Throw ',CardIndex[throwCard])
             ###
@@ -83,10 +96,18 @@ class Table:
                     ###
                     if verbose : 
                         print ('Agent ',i,':',tmpState,end=' [ ')
-                        for card in tmpCards :
-                            print (CardIndex[card],end=',')
+                        if tmpState == '胡':
+                            print (tmpCards)
+                            for cards in tmpCards:
+                                print ('[ ',end='')
+                                for card in cards:
+                                    print (CardIndex[card],end=',')
+                                print ('\b],',end='')
+                        else:
+                            for card in tmpCards :
+                                print (CardIndex[card],end=',')
                         print ('\b]')
-                        # input()
+                        #input()
                     ###
                     
                     if tmpState == '過':
@@ -127,6 +148,8 @@ class Table:
             
             
             if state == '胡':
+                winAgent = nextAgent
+                loseAgent = self.currentAgent
                 break
 			            
             if state == '吃' or state == '碰' or state == '槓':
@@ -170,9 +193,17 @@ class Table:
             print ('-------------------------------------')
 
         if state == '胡' :
-            print ('The winner is : ',self.currentAgent)
+            print ('贏家 : ',winAgent)
+            print ('放槍 : ',loseAgent)
+            return winAgent
+        elif state == '自摸':
+            print (self.currentAgent,'自摸')
+            return self.currentAgent
         elif state == '流局' :
             print (state)
+            return None
+        else:
+            assert 0==1
         
 
     def pickCard(self):
@@ -308,17 +339,3 @@ class Table:
             space = int(len(table[0][0])/2)
             table[-1][0]=' '*space+'o'+' '*space
 
-'''
-    testing part
-'''
-
-def f():
-    pass
-if __name__ == '__main__' :
-    table = Table()
-    table.newGame()
-    for i in range(3):
-        table.addAgent(RandomAction)
-    table.addAgent(HumanAction)
-    table.deal()
-    table.gameStart(True,True)
