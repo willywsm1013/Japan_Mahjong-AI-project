@@ -11,6 +11,12 @@ class Table:
     MAX_Agent = 4
     currentAgent = 0
     deck = []
+    throwsAndCombination = [] ## 紀錄[已經丟的牌,已翻開的組合,當局產生的組合]
+    def __init__(self,saved=False):
+        self.autoSaved = False
+        if saved :
+            self.autoSaved = True
+
     def newGame(self) :
         self.agents = []
         self.deckInitial()
@@ -237,23 +243,3 @@ class Table:
             print ('card Checkerror')
 
         return not error
-'''
-    testing part
-'''
-
-def f():
-    pass
-if __name__ == '__main__' :
-    table = Table()
-    record = [0]*4
-    repeat = 100.0
-    for time in range(int(repeat)):
-        table.newGame()
-        for i in range(3):
-            table.addAgent(RandomAgent(i))
-        table.addAgent(OneStepAgent(3))
-        table.deal()
-        winner = table.gameStart(True)
-        if winner != None:
-            record[winner]+=1
-    print (record)
