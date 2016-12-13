@@ -72,7 +72,7 @@ class Table:
                             
             if state == '自摸' : 
                 if verbose :
-                    print ('Agent ',i,':',state,end=' [ ')
+                    print ('Agent ',self.currentAgent,':',state,end=' [ ')
                     for cards in throwCard:
                         print ('[ ',end='')
                         for card in cards:
@@ -150,7 +150,13 @@ class Table:
                 break
 			            
             if state == '吃' or state == '碰' or state == '槓':
+                cardsThrowed = self.agents[nextAgent].getCardsThrowed()
+                openedCombination = self.agents[nextAgent].getCardsOnBoard() 
+                self.throwsAndCombination.append([cardsThrowed,openedCombination,cards])
+                print ('Record : ',[cardsThrowed,openedCombination,cards])
+                #input()
                 if verbose :
+
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
                 takeAgent = nextAgent            
                 takeCards = cards                
@@ -213,6 +219,9 @@ class Table:
 
     def shuffleDeck(self):
         random.shuffle(self.deck)    
+
+    def getThrowsAndCombination(self):
+        return self.throwsAndCombination
 
     def __cardChecker(self,cards,state):
         if state != '胡':
