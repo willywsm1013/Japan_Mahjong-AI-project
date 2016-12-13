@@ -253,7 +253,7 @@ class Agent :
             youxiaopaiNum = 0
             for card in case[2]:
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
-                assert youxiaopaiNum >= 0
+                assert youxiaopaiNum >= 0,(handcard)
             case.append(youxiaopaiNum)
 
         return xiangtingshuInfo

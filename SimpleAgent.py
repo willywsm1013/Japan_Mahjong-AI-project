@@ -12,7 +12,7 @@ class RandomAgent(Agent):
         self.cardsThrowed = [[],[],[],[]]
         self.cardOpened = []
         self.playerNumber = player_number
-    def takeAction(self,newCard):
+    def takeAction(self,newCard,table=None):
         if newCard != None :
             self.handcard.append(newCard)
         
@@ -40,7 +40,7 @@ class OneStepAgent(Agent):
         self.cardsThrowed = [[],[],[],[]]
         self.cardOpened = []
         self.playerNumber = player_number
-    def takeAction(self,newCard):
+    def takeAction(self,newCard,table=None):
         if newCard != None :
             self.handcard.append(newCard)
         

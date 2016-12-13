@@ -20,7 +20,7 @@ class Table:
     def newGame(self) :
         self.agents = []
         self.deckInitial()
-        self.throwedCards=[[],[],[],[]]
+        self.throwedCards=[0]*34
 
     def addAgent(self,newAgent):
         if len(self.agents) < self.MAX_Agent :
@@ -57,11 +57,10 @@ class Table:
                 if pretty:
                     table = self.__getVisibleTable()
                     self.__addToken(table,self.currentAgent)
-                    if self.currentAgent!=3:
-                        for row in table:
-                            print ('|'.join(map(str,row)))
+                    for row in table:
+                        print ('|'.join(map(str,row)))
+                    input()
 
-                #input()
                 print ("\nAgent ",self.currentAgent,"'s action")
             ###
             
@@ -69,12 +68,8 @@ class Table:
             if newCard != None :
                 print ('get ',CardIndex[newCard]) 
             state ,throwCard = agent.takeAction(newCard,table)
-            self.throwedCards[throwCard]-=1
-                        
-            if state == '胡' :
-                break
-            
-                       
+                                    
+                            
             if state == '自摸' : 
                 if verbose :
                     print ('Agent ',i,':',state,end=' [ ')
@@ -86,6 +81,9 @@ class Table:
                     print ('\b]')
                 break
             
+            self.throwedCards[throwCard]+=1
+            assert self.throwedCards[throwCard] <=4
+
             ###
             if verbose : print ('Throw ',CardIndex[throwCard])
             ###
@@ -157,14 +155,7 @@ class Table:
                 takeAgent = nextAgent            
                 takeCards = cards                
 
-                if state == '吃':
-                    for i in cards:
-                        if i != throwCard:
-                            self.throwedCards[i]-=1
-                elif state == '碰':
-                    self.throwedCards[throwCard]-=2 
-                elif state == '槓':
-                    self.throwedCards[throwCard]=0
+                if state == '槓':
                     newCard = self.pickCard()
                     ## if deck is empty it means no winner in this round
                     if newCard == None :
@@ -359,12 +350,12 @@ class Table:
 
     def __addToken(self,table,token):
         if token == 0:
-            table[13][-1]='o'
+            table[25][-1]='o'
         elif token == 1:
             space = int(len(table[0][0])/2)
-            table[0][0]=' '*space+'o'+' '*space
+            table[13][0]=' '*space+'o'+' '*space
         elif token == 2:
-            table[13][0]='o'
+            table[25][0]='o'
         elif token == 3:
             space = int(len(table[0][0])/2)
             table[-1][0]=' '*space+'o'+' '*space
