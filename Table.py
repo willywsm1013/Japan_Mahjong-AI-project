@@ -39,7 +39,7 @@ class Table:
                 self.deck = self.deck[13::]
                 agent.initialHandCard(handCard)
 
-    def gameStart(self,verbose = False,UI=False):
+    def gameStart(self,verbose = False,UI=False,pause=False):
         print ('Game start !')
         self.currentAgent = random.randint(0,3)
         for i in range(self.MAX_Agent):
@@ -60,18 +60,18 @@ class Table:
                     agent.printHandCard()
                 
                 print ("\nAgent ",self.currentAgent,"'s action")
-                if newCard != None:
+            if (verbose or UI) and newCard != None:
                     print ('get ',CardIndex[newCard]) 
-                if UI:
-                    table = self.__getVisibleTable()
-                    self.__addToken(table,self.currentAgent)
-                    for row in table:
-                        print ('|'.join(map(str,row)))
-                    input()
+            if UI:
+                table = self.__getVisibleTable()
+                self.__addToken(table,self.currentAgent)
+                for row in table:
+                    print ('|'.join(map(str,row)))
+                input()
             ###
 
             agent  = self.agents[self.currentAgent]
-            state ,throwCard = agent.takeAction(newCard,table)
+            state ,throwCard = agent.takeAction(newCard)
                                     
                             
             if state == '自摸' : 
@@ -87,8 +87,9 @@ class Table:
             
 
             ###
-            if verbose : 
+            if verbose or UI: 
                 print ('Throw ',CardIndex[throwCard])
+            if UI:
                 input()
             ###
 
@@ -154,9 +155,10 @@ class Table:
                 break
 			            
             if state == '吃' or state == '碰' or state == '槓':
-                if verbose :
+                if verbose or UI:
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
-                    input()
+                if UI:
+                   input()
                 takeAgent = nextAgent            
                 takeCards = cards                
 
@@ -172,8 +174,9 @@ class Table:
 
             else :
                 self.throwedCards[self.currentAgent].append(throwCard)
-                if verbose:
+                if verbose or UI:
                     print ('No agnet get ',CardIndex[throwCard])
+                if UI: 
                     input()
                 takeAgent = None
                 takeCards = None
