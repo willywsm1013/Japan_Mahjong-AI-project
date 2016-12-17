@@ -252,3 +252,8 @@ class Agent :
             case.append(youxiaopaiNum)
 
         return xiangtingshuInfo
+    ################################################################
+    ###   get cards on board of this agent (這個agent翻開的牌)   ###
+    ################################################################
+    def getCardsOnBoard(self):
+        return self.cardsOnBoard[self.playerNumber] 

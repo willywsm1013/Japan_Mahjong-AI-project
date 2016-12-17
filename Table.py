@@ -5,6 +5,7 @@ from Agent import Agent
 from BasicDefinition import CardIndex
 import random
 from SimpleAgent import RandomAgent,OneStepAgent
+import getScore
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -41,8 +42,13 @@ class Table:
             if verbose :
                 
                 print ('current handcards for every agent :')
+                self.__getVisibleTable()
+                '''
                 for agent in self.agents :
                     agent.printHandCard()
+                '''
+                
+                input()
                 print ("\nAgent ",self.currentAgent,"'s action")
             ###
             
@@ -214,6 +220,81 @@ class Table:
                     return '吃'
 
         return None
+
+    def __getVisibleTable(self):
+        visibleTable=[]
+        visibleTable.append(['     ','-'*55,'     '])
+        ### get agent 1's cards on board 
+        cards = self.agents[1].getCardsOnBoard()
+        cards = sum(cards,[])
+        r1 = ['     ']
+        r2 = ['     ']
+        for card in cards :
+            chinese = CardIndex[card]
+            r1.append(chinese[0])
+            if len(chinese) == 2:
+                r2.append(chinese[1])
+            else :
+                r2.append('  ')
+        if len(cards)!=0:
+            r1.append('')
+            r2.append('')
+        visibleTable.append(r1)
+        visibleTable.append(r2)
+        visibleTable.append('')
+        ### get agent 2's cards on board
+        cards = self.agents[2].getCardsOnBoard()
+        cards = sum(cards,[])
+        for i in range(16) :
+            r = ['']
+            if i < len(cards) :
+                card = CardIndex[cards[i]]
+                if len(card) == 1:
+                    r.append(card.center(3))
+                else:
+                    r.append(card)
+                r.append(' '*55)
+            else :
+                r.append(' '*60)
+            visibleTable.append(r)
+        ### get agent 0's cards on board
+        cards = self.agents[0].getCardsOnBoard()
+        cards = sum(cards,[])
+        if len(cards) != 0:
+            print (cards)
+        for i in range(16) :
+            if i < len(cards) :
+                card = CardIndex[cards[i]]
+                if len(card) == 1:
+                    visibleTable[i+4].append(card.center(3))
+                else:
+                    visibleTable[i+4].append(card)
+
+            else :
+                visibleTable[i+4][-1] += ' '*5 
+            visibleTable[i+4].append('')
+        ### get agent 3's cards on board
+        cards = self.agents[3].getCardsOnBoard()
+        cards = sum(cards,[])
+        r1 = ['     ']
+        r2 = ['     ']
+        for card in cards :
+            chinese = CardIndex[card]
+            if len(chinese) == 2:
+                r1.append(chinese[0])
+                r2.append(chinese[1])
+            else :
+                r1.append(' ')
+                r2.append(chinese[0])
+        if len(cards)!=0:
+            r1.append('')
+            r2.append('')
+        visibleTable.append(r1)
+        visibleTable.append(r2)
+        visibleTable.append(['     ','-'*55,'     '])
+
+        for row in visibleTable:
+            print ('|'.join(map(str,row)))
 '''
     testing part
 '''
