@@ -13,6 +13,7 @@ class Agent :
         self.cardOpened = []
         self.playerNumber = player_number
         self.action = action
+        self.wind =None
 
     def goalTest(self):
         s1 = []    #distinguish 4 color
@@ -117,6 +118,16 @@ class Agent :
                     return False,None
         return True,combination
     
+    ################################
+    ###   設定門風 和 取得門風   ###
+    ################################
+    def setWind(self,wind):
+        assert self.wind == None
+        self.wind = wind
+
+    def getWind(self):
+        return self.wind
+
     ##########################################################
     ###   initial the first 13 hand card in the begining   ###
     ##########################################################
