@@ -20,7 +20,7 @@ class Table:
     def newGame(self) :
         self.agents = []
         self.deckInitial()
-        self.throwedCards=[0]*34
+        self.throwedCards=[[],[],[],[]]
 
     def addAgent(self,newAgent):
         if len(self.agents) < self.MAX_Agent :
@@ -39,7 +39,7 @@ class Table:
                 self.deck = self.deck[13::]
                 agent.initialHandCard(handCard)
 
-    def gameStart(self,verbose = False,pretty=False):
+    def gameStart(self,verbose = False,UI=False):
         print ('Game start !')
         self.currentAgent = random.randint(0,3)
         print ('Agent ',self.currentAgent,' is first!')
@@ -54,19 +54,19 @@ class Table:
                 for agent in self.agents :
                     agent.printHandCard()
                 
-                if pretty:
+                
+                print ("\nAgent ",self.currentAgent,"'s action")
+                if newCard != None:
+                    print ('get ',CardIndex[newCard]) 
+                if UI:
                     table = self.__getVisibleTable()
                     self.__addToken(table,self.currentAgent)
                     for row in table:
                         print ('|'.join(map(str,row)))
                     input()
-
-                print ("\nAgent ",self.currentAgent,"'s action")
             ###
-            
+
             agent  = self.agents[self.currentAgent]
-            if newCard != None :
-                print ('get ',CardIndex[newCard]) 
             state ,throwCard = agent.takeAction(newCard,table)
                                     
                             
@@ -81,11 +81,11 @@ class Table:
                     print ('\b]')
                 break
             
-            self.throwedCards[throwCard]+=1
-            assert self.throwedCards[throwCard] <=4
 
             ###
-            if verbose : print ('Throw ',CardIndex[throwCard])
+            if verbose : 
+                print ('Throw ',CardIndex[throwCard])
+                input()
             ###
 
             assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
@@ -152,6 +152,7 @@ class Table:
             if state == '吃' or state == '碰' or state == '槓':
                 if verbose :
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
+                    input()
                 takeAgent = nextAgent            
                 takeCards = cards                
 
@@ -166,8 +167,10 @@ class Table:
                     newCard = None
 
             else :
+                self.throwedCards[self.currentAgent].append(throwCard)
                 if verbose:
                     print ('No agnet get ',CardIndex[throwCard])
+                    input()
                 takeAgent = None
                 takeCards = None
                 newCard = self.pickCard()
@@ -262,17 +265,12 @@ class Table:
     def __getVisibleTable(self):
         visibleTable=[]
         visibleTable.append(['*'*69])
-        for i in range(11):
-            visibleTable.append([])
-        for i in range(34):
-            card = CardIndex[i]
-            if i < 30:
-                if len(card)==2:
-                    visibleTable[1+i%10].append(card+':'+str(self.throwedCards[i])+' ')
-                else:
-                    visibleTable[1+i%10].append(' '+card+' :'+str(self.throwedCards[i])+' ')
-            else:
-                visibleTable[11].append(' '+card+' :'+str(self.throwedCards[i])+' ')
+        for i in range(self.MAX_Agent):
+            cards = ''
+            for card in self.throwedCards[i]:
+                cards += CardIndex[card]+','
+            visibleTable.append(['Agent '+str(i)+' : ' +cards])
+        
         visibleTable.append(['*'*69])
         visibleTable.append([' '*69])
         visibleTable.append(['      ','-'*55,'      '])
@@ -310,6 +308,8 @@ class Table:
                 r.append(' '*60)
             visibleTable.append(r)
         ### get agent 0's cards on board
+        
+        offset = len(visibleTable)-16
         cards = self.agents[0].getCardsOnBoard()
         cards = sum(cards,[])
         if len(cards) != 0:
@@ -318,13 +318,13 @@ class Table:
             if i < len(cards) :
                 card = CardIndex[cards[i]]
                 if len(card) == 1:
-                    visibleTable[i+18].append(card.center(3))
+                    visibleTable[i+offset].append(card.center(3))
                 else:
-                    visibleTable[i+18].append(card)
+                    visibleTable[i+offset].append(card)
 
             else :
-                visibleTable[i+18][-1] += ' '*5 
-            visibleTable[i+18].append('')
+                visibleTable[i+offset][-1] += ' '*5 
+            visibleTable[i+offset].append('')
         ### get agent 3's cards on board
         cards = self.agents[3].getCardsOnBoard()
         cards = sum(cards,[])
@@ -349,14 +349,14 @@ class Table:
         return visibleTable
 
     def __addToken(self,table,token):
+        length = len(table)
         if token == 0:
-            table[25][-1]='o'
+            table[length-13][-1]='o'
         elif token == 1:
             space = int(len(table[0][0])/2)
-            table[13][0]=' '*space+'o'+' '*space
+            table[length-25][0]=' '*space+'o'+' '*space
         elif token == 2:
-            table[25][0]='o'
+            table[length-13][0]='o'
         elif token == 3:
             space = int(len(table[0][0])/2)
             table[-1][0]=' '*space+'o'+' '*space
-

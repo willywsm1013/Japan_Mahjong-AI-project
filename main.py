@@ -11,7 +11,7 @@ for time in range(int(repeat)):
         table.addAgent(RandomAgent(i))
     table.addAgent(OneStepAgent(3))
     table.deal()
-    winner = table.gameStart(True)
+    winner = table.gameStart(verbose=True,UI=True)
     if winner != None:
         record[winner]+=1
 print (record)
