@@ -223,10 +223,12 @@ class Agent :
     ###   get cards on board of this agent (這個agent翻開的牌)   ###
     ################################################################
     def getCardsOnBoard(self):
-        return self.cardsOnBoard[self.playerNumber] 
+        cardsOnBoard = self.cardsOnBoard[self.playerNumber][:]
+        return cardsOnBoard
     
     def getCardsThrowed(self):
-        return self.cardsThrowed[self.playerNumber]
+        cardsThrowed = self.cardsThrowed[self.playerNumber][:]
+        return cardsThrowed
     ##################################
     ###   calculate xiangtingshu   ###
     ##################################
