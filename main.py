@@ -23,6 +23,7 @@ try :
             winRecord[winner]+=1
         if loser != None:
             loseRecord[loser]+=1
+    
     enemyData = table.getThrowsAndCombination()
     print (enemyData)
     print ('data lenth = ',len(enemyData))
@@ -30,7 +31,9 @@ try :
     cPickle.dump(enemyData, f, protocol=cPickle.HIGHEST_PROTOCOL)
     f.close()
     print ('save data to ',pickle_name)
-    print (record)
+    
+    print (winRecord)
+    print (loseRecord)
 except KeyboardInterrupt:
     if autoSave:
         print (end='\r')
