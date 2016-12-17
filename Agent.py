@@ -33,8 +33,7 @@ class Agent :
                 s3.append(card)
             else:
                 s4.append(card)
-        s = [s1,s2,s3]
-        
+        s = [s1,s2,s3]  
         twoPair = 0
         while len(s4) != 0:
             count = s4.count(s4[0])
@@ -145,7 +144,7 @@ class Agent :
     ###   case 2 : 胡                                                   ###
     ###       return state '胡' and None                                ###
     #######################################################################
-    def takeAction(self,newCard):
+    def takeAction(self,newCard,table):
         if newCard != None :
             self.handcard.append(newCard)
         
@@ -156,7 +155,7 @@ class Agent :
         if result:
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
-            return 'Throw',self.action(self.handcard)####
+            return 'Throw',self.action(self.handcard,table)####
 
 
 
@@ -207,7 +206,7 @@ class Agent :
             if takeAgent==self.playerNumber:
                 self.handcard.append(throwCard)
                 for card in cards:
-                    print ("handcard",self.handcard)
+                    #print ("handcard",self.handcard)
                     self.handcard.remove(card)
 
         if takeAgent != None:
@@ -216,10 +215,10 @@ class Agent :
         else:
             self.cardOpened.append(throwCard)
 
-        print ("throwAgent ",throwAgent, "throwcard ", throwCard)
-        print ("list of cards throw :",self.cardsThrowed)
-        print ("takeAgent, ",takeAgent)
-        print ("list of cards agents take , ", self.cardsOnBoard)
+        #print ("throwAgent ",throwAgent, "throwcard ", throwCard)
+        #print ("list of cards throw :",self.cardsThrowed)
+        #print ("takeAgent, ",takeAgent)
+        #print ("list of cards agents take , ", self.cardsOnBoard)
 
     ###########################
     ###   print hand card   ###
@@ -232,6 +231,13 @@ class Agent :
             print (CardIndex[card],end=' ')
         print ()
 
+    ################################################################
+    ###   get cards on board of this agent (這個agent翻開的牌)   ###
+    ################################################################
+    def getCardsOnBoard(self):
+        cardsOnBoard = self.cardsOnBoard[self.playerNumber][:]
+        return cardsOnBoard 
+    
     ##################################
     ###   calculate xiangtingshu   ###
     ##################################
@@ -261,12 +267,7 @@ class Agent :
             youxiaopaiNum = 0
             for card in case[2]:
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
-                assert youxiaopaiNum >= 0
+                assert youxiaopaiNum >= 0,(handcard)
             case.append(youxiaopaiNum)
 
         return xiangtingshuInfo
-    ################################################################
-    ###   get cards on board of this agent (這個agent翻開的牌)   ###
-    ################################################################
-    def getCardsOnBoard(self):
-        return self.cardsOnBoard[self.playerNumber] 
