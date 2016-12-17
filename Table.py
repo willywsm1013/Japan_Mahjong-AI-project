@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-　
-import BasicDefinition
+import copy 
 import numpy as np 
 from six.moves import cPickle
 from Agent import Agent
@@ -72,13 +72,8 @@ class Table:
                             
             if state == '自摸' : 
                 if verbose :
-                    print ('Agent ',self.currentAgent,':',state,end=' [ ')
-                    for cards in throwCard:
-                        print ('[ ',end='')
-                        for card in cards:
-                            print (CardIndex[card],end=',')
-                        print ('\b],',end='')
-                    print ('\b]')
+                    print ('Agent ',self.currentAgent,':',state,end=' ')
+                    self.__printCards(throwCard)
                 break
             
             self.throwedCards[throwCard]+=1
@@ -101,18 +96,9 @@ class Table:
                     
                     ###
                     if verbose : 
-                        print ('Agent ',i,':',tmpState,end=' [ ')
-                        if tmpState == '胡':
-                            print (tmpCards)
-                            for cards in tmpCards:
-                                print ('[ ',end='')
-                                for card in cards:
-                                    print (CardIndex[card],end=',')
-                                print ('\b],',end='')
-                        else:
-                            for card in tmpCards :
-                                print (CardIndex[card],end=',')
-                        print ('\b]')
+                        print ('Agent ',i,':',tmpState,end=' ')
+                        self.__printCards(tmpCards)
+                        print ('a:',tmpCards)
                         #input()
                     ###
                     assert self.__cardChecker(tmpCards,tmpState) 
@@ -154,10 +140,7 @@ class Table:
                 openedCombination = self.agents[nextAgent].getCardsOnBoard() 
                 self.throwsAndCombination.append([cardsThrowed,openedCombination,cards])
                 print ('Record : ',[cardsThrowed,openedCombination,cards])
-                if cards == [4,5,6]:
-                    input()
                 if verbose :
-
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
                 takeAgent = nextAgent            
                 takeCards = cards                
@@ -192,13 +175,13 @@ class Table:
         if state == '胡' :
             print ('贏家 : ',winAgent)
             print ('放槍 : ',loseAgent)
-            return winAgent
+            return winAgent,loseAgent
         elif state == '自摸':
             print (self.currentAgent,'自摸')
-            return self.currentAgent
+            return self.currentAgent,None
         elif state == '流局' :
             print (state)
-            return None
+            return None,None
         else:
             assert 0==1
         
@@ -223,7 +206,18 @@ class Table:
 
     def getThrowsAndCombination(self):
         return self.throwsAndCombination
-
+    
+    def __printCards(self,cards,end='\n'):
+        c = copy.deepcopy(cards)
+        for i in range(len(c)):
+            item = c[i]
+            if type(item) == type(list()):
+                for j in range(len(item)):
+                    c[i][j] = CardIndex[item[j]]
+            else :
+                c[i] = CardIndex[item]
+        print (c,end=end)
+    
     def __cardChecker(self,cards,state):
         if state != '胡':
             assert all([(card < 34 and card >= 0) for card in cards])
@@ -239,7 +233,8 @@ class Table:
                 cards = sorted(cards)
                 if cards[0]+1 == cards[1] and cards[1]+1 == cards[2] :
                     error=False
-        elif state=='胡' and len(cards)>=5:
+        elif (state=='胡' or state == '自摸') and len(cards)>=5:
+            print (cards)
             error = False
             for card in cards:
                 if len(card)==2 and card[0]==card[1]:
