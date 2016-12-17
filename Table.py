@@ -154,7 +154,8 @@ class Table:
                 openedCombination = self.agents[nextAgent].getCardsOnBoard() 
                 self.throwsAndCombination.append([cardsThrowed,openedCombination,cards])
                 print ('Record : ',[cardsThrowed,openedCombination,cards])
-                #input()
+                if cards == [4,5,6]:
+                    input()
                 if verbose :
 
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
