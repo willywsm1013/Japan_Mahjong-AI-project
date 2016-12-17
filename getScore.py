@@ -396,9 +396,10 @@ hiddenCards=[[13, 14, 15], [25, 25]]
 openCards = [[26, 26, 26, 26], [14, 15, 16], [22, 23, 24]]
 '''
 
-winCards=[[10, 10, 10], [20, 20, 20], [0, 0, 0], [30, 30, 30], [31, 31]]
-hiddenCards=[[10, 10, 10], [20, 20, 20], [0, 0, 0], [30, 30, 30], [31, 31]]
-openCards= []
-score = getScore( 2 , winCards, hiddenCards , openCards )
+if __name__ == '__main__':
+    winCards=[[10, 10, 10], [20, 20, 20], [0, 0, 0], [30, 30, 30], [31, 31]]
+    hiddenCards=[[10, 10, 10], [20, 20, 20], [0, 0, 0], [30, 30, 30], [31, 31]]
+    openCards= []
+    score = getScore( 2 , winCards, hiddenCards , openCards )
 
-print ("Scores = ",score)
+    print ("Scores = ",score)
