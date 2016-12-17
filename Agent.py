@@ -4,7 +4,7 @@ import mahjong
 class Agent :
    
 	
-    def __init__(self,player_number,action):
+    def __init__(self,player_number):
         #playerNumber = None
         #action = None
         self.handcard = None
@@ -12,9 +12,11 @@ class Agent :
         self.cardsThrowed = [[],[],[],[]]
         self.cardOpened = []
         self.playerNumber = player_number
-        self.action = action
         self.wind =None
-
+    
+    def setAction(self,action):
+        self.action = action
+    
     def goalTest(self):
         s1 = []    #distinguish 4 color
         s2 = []

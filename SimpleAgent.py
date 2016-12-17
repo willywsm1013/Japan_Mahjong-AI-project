@@ -6,13 +6,7 @@ from Agent import Agent
 ###   Random Agent   ###
 ########################
 class RandomAgent(Agent):
-    def __init__(self,player_number):
-        self.handcard = None
-        self.cardsOnBoard = [[],[],[],[]]
-        self.cardsThrowed = [[],[],[],[]]
-        self.cardOpened = []
-        self.playerNumber = player_number
-        self.wind = None
+    
     def takeAction(self,newCard):
         if newCard != None :
             self.handcard.append(newCard)
@@ -35,13 +29,7 @@ class RandomAgent(Agent):
 ###   One step Agent   ###
 ##########################
 class OneStepAgent(Agent):
-    def __init__(self,player_number):
-        self.handcard = None
-        self.cardsOnBoard = [[],[],[],[]]
-        self.cardsThrowed = [[],[],[],[]]
-        self.cardOpened = []
-        self.playerNumber = player_number
-        self.wind=None
+    
     def takeAction(self,newCard):
         if newCard != None :
             self.handcard.append(newCard)
