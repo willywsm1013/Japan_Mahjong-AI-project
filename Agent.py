@@ -84,7 +84,7 @@ class Agent :
                             count = color.count(color[i])
                             ## 某類牌有2 3 4張在手上
                             if count > 1:
-                                temp = color
+                                temp = color[:]
                                 tempCombination = [[temp[i]]*2]
                                 del temp[i:i+2]
                                 correct2 = True
