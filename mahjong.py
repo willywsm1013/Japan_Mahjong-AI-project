@@ -4,7 +4,9 @@
 
 import re
 import random
-
+###############################################
+###      他創建了一個class用來表示每"一"張牌      ###
+###############################################
 class Card:
     """docstring for card"""
     def __init__(self, card):
@@ -16,20 +18,37 @@ class Card:
             self.rank = int(re.search('[1-9]', card).group())       
 
     def __str__(self):
-        return str(self.rank) + self.suit
+        return str(self.rank) + self.suit#ex:'1'+'m'
 
     def get_suit(self):
-        return self.suit
+        return self.suit #'m','p','s','z'
 
     def get_rank(self):
-        return self.rank
+        return self.rank #'1'or '2' or etc....'3456789'
 
     def get_flag(self):
         return self.flag
 
     def set_flag(self, flag):
         self.flag = flag
-
+######################################################################################################################
+#創建了一個class用來表示每組牌           
+#不一定是已經組合好的牌
+#牌組類型：
+#1張 - 孤張："guzhang",ex:1m
+#2張 - 兩張花色及數字一樣,對子:"duizi" 
+#2張 - 差一張即可成為順子，不為字,ex:3m4m,兩面："liangmian" / 如果是12或89即為，邊張："bianzhang" 
+#                          / 不連續的,ex:1m3m,坎張："kanzhang"  
+#3張 - 3張一樣,刻子："kezi"
+#    - 3張連續,順子："shunzi"
+#    - 3張缺一，連坎："liankan" ex: 1m3m5m  
+#    - 復合搭:"fuheda",# 复合搭共有112 113 122 133四种形态: 1 3张差别为1或2; 因排序第二张必然位于中间,且不是顺子(否则已经return)        
+######################################################################################################################
+#MIANZI = ['shunzi', 'kezi']  面子是指已經完成三張或4張的組合，包括順子和刻子（code裡並沒有考慮槓！）
+#QUETOU = ['duizi'] 雀頭就等於對子
+#DAZI = ['duizi'（對子）, 'bianzhang'（邊張）, 'kanzhang'（坎張）, 'liangmian'(兩面)] 搭子，一個面子的前身，一個已經組好的面子或是一個雀頭，
+#GUZHANG = ['guzhang'] 孤張
+######################################################################################################################
 class Group(object):
     """docstring for Group
     手牌组: 面子 雀头 搭子 复合搭, etc.
@@ -40,29 +59,30 @@ class Group(object):
         super(Group, self).__init__()
         self.cards = cards # 牌组成员列表, 使用列表表示
         self.closed = True # 是否都在手中(closed)
-        self.type = self.cal_type()
+        self.type = self.cal_type()#將用來建立這個object的手牌去定義他的類型並存在type這個變數之中，這個變數是一個string
 
     def __str__(self): # note: 如何把列表串联变成字符最快, 似乎 py doc FAQ 有
         str_group = ''
         for card in self.cards:
             str_group += str(card)
-        return str_group
+        #print ("str_group",str_group)
+        return str_group#ex:1m2m,3m3m3m
 
     def sort(self):
         if self.type in MIANZI:
             sort_type = 0
-        elif self.type in QUETOU:
+        elif self.type in QUETOU:#QUETOU:雀頭
             sort_type = 1
         elif self.type in DAZI: # todo 需要排序, 按照面子雀头搭子孤张顺序
             sort_type = 2
-        elif self.type in GUZHANG:
+        elif self.type in GUZHANG:#GUZHANG：孤張
             sort_type = 3
         sort_suit = self.cards[0].get_suit()
         return str(sort_type) + sort_suit + str(self) 
         #类型+花色+内容; 如0m1m2m3m(面子 万 123m)1s3s3s
 
     def get_cards(self):
-        return self.cards
+        return self.cards#cards:mahjong.card object
 
     def cal_type(self):
         """返回牌组类型: 面子 雀头 搭子 复合搭
@@ -77,17 +97,17 @@ class Group(object):
             return "guzhang"
         elif len(self.cards) == 2:
             if self.cards[0].get_suit() == self.cards[1].get_suit():
-                if self.cards[0].get_rank() == self.cards[1].get_rank(): #雀头
+                if self.cards[0].get_rank() == self.cards[1].get_rank():#兩張花色及數字一樣,對子:"duizi"
                     return "duizi"
                 elif (self.cards[0].get_rank() == self.cards[1].get_rank() - 1 and 
                       self.cards[0].get_suit() is not 'z'): #两面或边张
                     if self.cards[0].get_rank() == 1 or self.cards[0].get_rank() == 8: # 12, 89 边张
-                        return "bianzhang"
+                        return "bianzhang"#ex:1m2m
                     else: #两面
-                        return "liangmian"
+                        return "liangmian"#ex:8m9m
                 elif (self.cards[0].get_rank() == self.cards[1].get_rank() - 2 and 
                       self.cards[0].get_suit() is not 'z'): #坎张
-                    return "kanzhang"
+                    return "kanzhang"#ex:1m3m
             else:
                 return None
         elif len(self.cards) == 3:
@@ -96,7 +116,7 @@ class Group(object):
                 self.cards[0].get_suit() == self.cards[2].get_suit()):
                 if (self.cards[0].get_rank() == self.cards[1].get_rank() and 
                     self.cards[0].get_rank() == self.cards[2].get_rank()):
-                    return "kezi"
+                    return "kezi"#刻子
                     # todo: 可能要加入复合搭
                 elif (self.cards[0].get_suit() is not 'z' and
                       self.cards[0].get_rank() == self.cards[1].get_rank() - 1 and 
@@ -116,44 +136,48 @@ class Group(object):
         else: 
             return None
     
-    def get_type(self):
+    def get_type(self):#return是一個string，定義在上面那個cal_type中
         return self.type
 
-    def youxiaopai(self, make=''):
+    def youxiaopai(self, make=''):#這裡是Group這個class裡的有效牌function，下面還有一個XD不要搞錯了
         """返回有效牌类型(和数量?)
 
         i: 牌组
         o: 有效牌列表, in Card class
         """
         if self.type in MIANZI:
-            return []
+            return []#已經組好了不需要有效牌
         elif self.type is 'duizi':
-            return [self.cards[0]]
-        elif self.type is 'bianzhang':
-            if self.cards[0].get_rank() == 1:
-                rank = '3'
+            return [self.cards[0]]#對子還可以組成刻子，所以回傳一張有效牌
+        elif self.type is 'bianzhang':#ex:1m2m or 8m9m
+            if self.cards[0].get_rank() == 1:#1m2m
+                rank = '3'#代表他需要3
             else:
                 rank = '7'
-            return [Card(rank + self.cards[0].get_suit())]
-        elif self.type is 'kanzhang':
+            return [Card(rank + self.cards[0].get_suit())]#ex:回傳3m
+        elif self.type is 'kanzhang':#ex:1m3m
             rank = str(self.cards[0].get_rank() + 1)
-            return [Card(rank + self.cards[0].get_suit())]
-        elif self.type is 'liangmian':
-            rank1 = str(self.cards[0].get_rank() - 1)
-            rank2 = str(self.cards[0].get_rank() + 2)
+            return [Card(rank + self.cards[0].get_suit())]#ex:回傳2m
+        elif self.type is 'liangmian':#ex:3m4m
+            rank1 = str(self.cards[0].get_rank() - 1)#2m
+            rank2 = str(self.cards[0].get_rank() + 2)#5m
             return [Card(rank1 + self.cards[0].get_suit()),
                     Card(rank2 + self.cards[0].get_suit())]
-        elif self.type is 'guzhang':
+        elif self.type is 'guzhang':#下面在計算整個手牌的有效牌的時候，會把孤張分為，為了做雀頭的牌，或是用來做搭子的牌
             if make is 'quetou' or self.cards[0].get_suit() is 'z': # 为了做雀头, 或字牌也只有本身
                 return [self.cards[0]]
-            else:
+            else:#用來做搭子，ex:手上的牌為3m，會回傳1m,2m,3m(??),4m,5m
                 ranks = [-2, -1, 0, 1, 2]
                 return [Card(str(rank + self.cards[0].get_rank()) + self.cards[0].get_suit()) 
                         for rank in ranks 
                         if rank + self.cards[0].get_rank() in range(1, 10)]
         else:
             return []
-
+######################################################################################
+#這個class是用來計算手牌的有效牌。
+#在之後的一個FUNCTION中，會將手牌整理為不同的牌組並創建成不同的hand_in_group，這樣就會得到不同種的胡牌牌型，以計算其有效牌。
+#一個hand_in_group是一種組合（14張）。
+######################################################################################
 class Hand_in_group(object):
     """docstring for Hand_in_group
 
@@ -165,32 +189,34 @@ class Hand_in_group(object):
         # 如果不copy而是直接赋值, 会出现问题: 
         # 几个类变量使用同一个列表(和一开始以为的新建列表不同).
         # 虽然类变量地址不同, 但列表的链接相同!
-    
+    ###return的格式 ex: duizi-1p1p; duizi-5s5s; kanzhang-5m7m; kanzhang-3p5p; kanzhang-1s3s; guzhang-8m; guzhang-2p; guzhang-4z; 
     def __str__(self): # note: 如何把列表串联变成字符最快, 似乎 py doc FAQ 有
         str_hand = ''
         for group in self.groups:
             str_hand += group.get_type() + '-' + str(group) + '; '
+        #print ("str_hand,",str_hand)
         return str_hand
 
-    def append(self, new_group):
+    def append(self, new_group): #將新的GROUP加入
         self.groups.append(new_group)
         return self
 
-    def remove(self, remove_group): 
+    def remove(self, remove_group): #將指定的GROUP刪掉
         for group in self.groups:
             if is_samegroup(remove_group, group): # todo: 判断两个类变量内容是否相同, 有无更好方法
                 self.groups.remove(group)
                 return
 
-    def get_groups(self):
+    def get_groups(self): #得到手牌裡的這些GROUPS
         return self.groups
 
-    def sort(self):
+    def sort(self):#??
         #排序
         self.groups.sort(key=Group.sort)
 
     def xiangtingshu(self):
-        #计算向听数 n=8-2*面子-1*雀头(<=1)-1*搭子(<=4-面子)
+        #計算這個手牌中的某些組合的數量並計算向聽數
+        #计算向听数 n=8-2*面子-1*雀头(<=11*搭子(<=4-面子)
         num_mianzi = 0
         num_quetou = 0
         num_dazi = 0
@@ -242,7 +268,9 @@ class Hand_in_group(object):
             else:
                 num_guzhang += 1
         list_youxiaopai = [] # 用列表存放所有的有效牌
+        print ("-----------------------")
         for group in self.groups:
+            #print ("group",str(group))
             type_of_group = group.get_type() 
             if type_of_group in MIANZI: # 面子没有有效牌
                 pass
@@ -263,6 +291,7 @@ class Hand_in_group(object):
                 elif num_mianzi + (num_quetou - 1) + num_dazi < 4: 
                 # 面子+(对子-1)+搭子<4
                     list_youxiaopai += group.youxiaopai()
+           
         return list_youxiaopai
 
 MIANZI = ['shunzi', 'kezi']
@@ -364,6 +393,10 @@ def sort_hand(card):
     """
     return card.get_suit(), card.get_rank()
 
+
+###
+#這是一個recursive function，從第一張手牌開始依次迭帶
+#最花時間的就是在這裡！
 def hand_to_group(hand_todo, hand_set=Hand_in_group()):
     """把手牌整理为不同的牌组并计算向听数
 
@@ -372,7 +405,7 @@ def hand_to_group(hand_todo, hand_set=Hand_in_group()):
     o: 列表, 每个成员是 tuple (向听数, 牌组列表)
     """
     global list_xiangtingshu, xiangtingshu_lowest
-    if len(hand_todo) == 0: #finished
+    if len(hand_todo) == 0: #finished（每個group都分好了）
         # 计算向听数, 如果小于等于当前最小值, 添加到列表中
         # todo: 速度优化. 直接先算一下len(), 如果len很大, 可不用排序直接return, 节约时间
         hand_set.sort()
@@ -385,8 +418,17 @@ def hand_to_group(hand_todo, hand_set=Hand_in_group()):
             list_xiangtingshu.append((xiangtingshu, hand_set))
         return
 
-    card_to_set = hand_todo[0] # 需要处理的牌
-    #print('card to process', card_to_set) #
+    card_to_set = hand_todo[0] # 需要处理的牌,第一次hand_todo[0]是手牌中的第一張
+    #print()
+    #print('card to process', card_to_set)
+    ''' 
+    print('groups now')
+    for group in hand_set.get_groups():
+        print (str(group),',',end='')
+    '''
+    #檢驗每個group（之前已經放入hand_set的）看可否組成新的，
+    #如果可以的話就將原本的group remove掉，並將剩餘的手牌與新的groups放入遞迴。
+    #如果不行的話就跳過這個group去執行下一個
     for group in hand_set.get_groups():
         type_group = group.get_type()
         group_plus_card = Group(group.get_cards() + [card_to_set])
@@ -411,10 +453,11 @@ def hand_to_group(hand_todo, hand_set=Hand_in_group()):
             new.remove(group)
             new.append(group_plus_card)
             hand_to_group(hand_todo[1:], new)
-
+    #第一次沒有groups時會走到這裡
+    #finish之後也會走到這裡，然後hand_to_group就return空  
     hand_set_new = Hand_in_group(hand_set.get_groups())
     hand_set_new.append(Group([card_to_set]))
-    hand_to_group(hand_todo[1:], hand_set_new)# 孤张处理
+    hand_to_group(hand_todo[1:], hand_set_new)# 一張張处理
 
 def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
     """计算向听数的封装
@@ -431,16 +474,27 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
 
     hand = hand_processer(hand, raw_hand)
     hand_to_group(hand) # 1.处理成为手牌组
+    print("---------得到最小的向聽數的牌組----------")
     if output_notes:
         print('向听数:', xiangtingshu_lowest) #
-    unique_hands = []
-    for num, hand in list_xiangtingshu: # 去重
+    unique_hands = []#---------得到最小的向聽數的牌組（去掉重複的）----------
+    for num, hand in list_xiangtingshu: # 去重 #list_xiangtingshu是一個tuple(向聽數,hand_set)
         for unique_hand in unique_hands:
-            if is_samehandingroup(hand, unique_hand):
+            if is_samehandingroup(hand, unique_hand):#是用hand_to_group object中的__str__做比較
                 break
         else:
             unique_hands.append(hand)
-    unique_youxiaopais = []
+    #me
+    i=1
+    for hand in unique_hands:
+        print ()        
+        print ("hand ",i)
+        groups = hand.get_groups()
+        for group in groups:
+            print (str(group),end='')
+        i +=1 
+    print ()           
+    unique_youxiaopais = []#---------得到最小的向聽數的牌組的有效牌（去掉重複的）---------- 
     for hand in unique_hands: # 输出最小向听数的牌型
         #print(hand)
         for card in hand.youxiaopai():
@@ -459,7 +513,7 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
         for card in unique_youxiaopais:
             print(card, end = '')
         print()
-
+    print (xiangtingshu_lowest, num_youxiaopai, unique_youxiaopais)
     return xiangtingshu_lowest, num_youxiaopai, unique_youxiaopais
 
 def xiangtingshu_output(hand, raw_hand=True):
@@ -469,22 +523,23 @@ def xiangtingshu_output(hand, raw_hand=True):
     p: 调用 cal_xiangtingshu(), 输出所有的可能最小向听数组合, 暂只支持标准型
     o: 输出何切信息
     """
-    hand = hand_processer(hand, raw_hand)
+    hand = hand_processer(hand, raw_hand)#將input的凌亂的手牌排序並整理成他定義的class
     # todo: 只判断 unique card, 在重复型将可明显减少判断时间.
 
-    xiangtingshu_lowest = 8
+    xiangtingshu_lowest = 8 
     best_cards = []
     for card in hand: 
-        used_card(card)# 从牌山中去掉
+        used_card(card)# 將手牌從牌山中去掉，碰到一個牌就將那個牌的數量-1
     # 统计出最小向听数
     card0 = ''
     for card in hand: 
         if is_samecard(card, card0):
             continue
         else:
-            card0 = card
+            card0 = card#從手牌中選出來，要被丟掉的那張牌。
         hand_card = hand[:]
         hand_card.remove(card)         
+        #將某張牌丟掉之後，去計算向聽數
         xiangtingshu, num_youxiaopai, list_youxiaopai = cal_xiangtingshu(hand_card, raw_hand=False)
         if xiangtingshu < xiangtingshu_lowest:
             best_cards = [(card, xiangtingshu, num_youxiaopai, list_youxiaopai)]
@@ -492,7 +547,7 @@ def xiangtingshu_output(hand, raw_hand=True):
         elif xiangtingshu == xiangtingshu_lowest:
             best_cards.append((card, xiangtingshu, num_youxiaopai, list_youxiaopai))
     # 输出
-    """print('手牌: ', end = '')
+    print('手牌: ', end = '')
     print_hand(hand) # 输出手牌内容
     #print(best_cards)
     
@@ -501,7 +556,7 @@ def xiangtingshu_output(hand, raw_hand=True):
         for i in list_youxiaopai:
             youxiaopai += str(i)
         print('打{}, 向听数{}, 有效牌{}, {}种{}张'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai))
-    """
+   
     #my code
     transform = { '5z':0, '6z':10, '7z':20,
                   '1m':1, '1s':11, '1p':21,
