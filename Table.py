@@ -76,7 +76,7 @@ class Table:
             ###
 
             agent  = self.agents[self.currentAgent]
-            state ,throwCard = agent.takeAction(newCard)
+            state ,throwCard = agent.takeAction(newCard,verbose)
                                     
                             
             if state == '自摸' : 
