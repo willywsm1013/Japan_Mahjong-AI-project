@@ -67,6 +67,12 @@ class SimpleDefenseAgent(Agent):
             return 'Throw',self.SimpleDefense(verbose)
  
     def check(self,agentNum,card):
+        self.handcard.append(card)
+        result,cardCombination = self.goalTest()
+        if result:
+            return [[cardCombination,self.cardsOnBoard[self.playerNumber]], '胡', card]
+        self.handcard.remove(card)
+
         return [[],'過',card] 
     
     def SimpleDefense(self,verbose):

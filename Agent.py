@@ -170,7 +170,7 @@ class Agent :
         self.handcard.append(card)
         result,cardCombination = self.goalTest()
         if result:
-            return [cardCombination+self.cardsOnBoard[self.playerNumber], '胡', card]
+            return [[cardCombination,self.cardsOnBoard[self.playerNumber]], '胡', card]
         self.handcard.remove(card)
 
         subtract = self.playerNumber - agentNum
