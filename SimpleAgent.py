@@ -144,7 +144,8 @@ class SimpleDefenseAgent(Agent):
     def decision(self,safeCards,prob,verbose):
         choice = [card for card in safeCards if prob[self.handcard.index(card)] > 0.2]
         if len(choice) !=0 :
-            throw = random.choice(choice)
+            p = [prob[self.handcard.index(card)] for card in choice ]
+            throw = choice[p.index(max(p))]
             if verbose :
                 print ('select from safe card')
         else :
