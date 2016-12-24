@@ -12,6 +12,7 @@ class Table:
     currentAgent = 0
     deck = []
     throwsAndCombination = [] ## 紀錄[已經丟的牌,已翻開的組合,當局產生的組合]
+    loseReason = [[],[],[],[]]
     def __init__(self,saved=False):
         self.autoSaved = False
         if saved :
@@ -40,15 +41,19 @@ class Table:
                 agent.initialHandCard(handCard)
 
     def gameStart(self,verbose = False,UI=False,pause=False):
-        print ('Game start !')
         self.currentAgent = random.randint(0,3)
         for i in range(self.MAX_Agent):
             wind = WindIndex[i]
             agent = self.agents[(i+self.currentAgent)%self.MAX_Agent]
             agent.setWind(wind)
         
-        print ('Agent ',self.currentAgent,' is first!')
-        print ('-------------------------------------')
+        ###
+        if verbose: 
+            print ('Game start !')
+            print ('Agent ',self.currentAgent,' is first!')
+            print ('-------------------------------------')
+        ###
+
         newCard = self.pickCard()
         while True:
             table = None
@@ -71,7 +76,7 @@ class Table:
             ###
 
             agent  = self.agents[self.currentAgent]
-            state ,throwCard = agent.takeAction(newCard)
+            state ,throwCard = agent.takeAction(newCard,verbose)
                                     
                             
             if state == '自摸' : 
@@ -129,6 +134,8 @@ class Table:
                         nextAgent = i
                         cards = tmpCards
                         state = tmpState
+                        if self.autoSaved :
+                            self.loseReason[self.currentAgent].append([cards,throwCard])
                         break
                     if tmpState == '碰':
                         assert state != '槓' and state != '碰'
@@ -188,26 +195,26 @@ class Table:
 
             ## broadcast information
             for i in range(self.MAX_Agent):
-                self.agents[i].update(self.currentAgent,takeAgent,takeCards,throwCard)
+                self.agents[i].update(self.currentAgent,takeAgent,takeCards,throwCard,verbose)
             self.currentAgent = nextAgent
-            print ('-------------------------------------')
+            if verbose :
+                print ('-------------------------------------')
 
         if state == '胡' :
             print ('贏家 : ',winAgent)
             print ('放槍 : ',loseAgent)
-            return winAgent
+            return winAgent,loseAgent
         elif state == '自摸':
             print (self.currentAgent,'自摸')
-            return self.currentAgent
+            return self.currentAgent,None
         elif state == '流局' :
             print (state)
-            return None
+            return None,None
         else:
             assert 0==1
-        
 
     def pickCard(self):
-        if len(self.deck) != 0:
+        if len(self.deck) > 14:
             return self.deck.pop()
         else:
             return None
@@ -225,48 +232,52 @@ class Table:
         random.shuffle(self.deck)    
 
     def __cardChecker(self,cards,state):
-        if state != '胡':
-            assert all([(card < 34 and card >= 0) for card in cards])
-        error = True
-        if len(cards)==0 and state == '過':
-            error=False
-        elif len(cards) == 4 and len(set(cards)) == 1 and state == '槓':
-            error = False
-        elif len(cards) == 3 and len(set(cards)) == 1 and state == '碰':
-            error = False
-        elif len(cards) == 3 and len(set(cards)) == 3:
-            if all([(card > 0 and card < 10) or (card>10 and card < 20) or (card>20 and card<30) for card in cards]):
-                cards = sorted(cards)
-                if cards[0]+1 == cards[1] and cards[1]+1 == cards[2] :
-                    error=False
-        elif state=='胡' and len(cards)>=5:
-            error = False
-            for card in cards:
-                if len(card)==2 and card[0]==card[1]:
-                    pass
-                elif len(card)==3:
-                    cardLen = len(set(card))
-                    if cardLen==3 and card[0]+1==card[1] and card[1]+1==card[2]:
+        try :
+            if state != '胡':
+                assert all([(card < 34 and card >= 0) for card in cards])
+            error = True
+            if len(cards)==0 and state == '過':
+                error=False
+            elif len(cards) == 4 and len(set(cards)) == 1 and state == '槓':
+                error = False
+            elif len(cards) == 3 and len(set(cards)) == 1 and state == '碰':
+                error = False
+            elif len(cards) == 3 and len(set(cards)) == 3:
+                if all([(card > 0 and card < 10) or (card>10 and card < 20) or (card>20 and card<30) for card in cards]):
+                    cards = sorted(cards)
+                    if cards[0]+1 == cards[1] and cards[1]+1 == cards[2] :
+                        error=False
+            elif state=='胡' and len(cards)>=5:
+                error = False
+                for card in cards:
+                    if len(card)==2 and card[0]==card[1]:
                         pass
-                    elif cardLen == 1:
+                    elif len(card)==3:
+                        cardLen = len(set(card))
+                        if cardLen==3 and card[0]+1==card[1] and card[1]+1==card[2]:
+                            pass
+                        elif cardLen == 1:
+                            pass
+                        else:
+                            error=True
+                            break
+                    elif len(card)==4 and len(set(card))==1:
                         pass
-                    else:
+                    else :
                         error=True
                         break
-                elif len(card)==4 and len(set(card))==1:
-                    pass
-                else :
-                    error=True
-                    break
-        else :
-            print (cards)
-            print (state)
-            assert 0==1
-        if error :
-            print ('state : ',state,', cards : ',cards)
-            print ('card Checkerror')
+            else :
+                print (cards)
+                print (state)
+                assert 0==1
+            if error :
+                print ('state : ',state,', cards : ',cards)
+                print ('card Checkerror')
 
-        return not error
+            return not error
+        except :
+            print ('cards :',cards)
+            print ('state :',state)
 
     def __getVisibleTable(self):
         visibleTable=[]

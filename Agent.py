@@ -10,6 +10,7 @@ class Agent :
         self.handcard = None
         self.cardsOnBoard = [[],[],[],[]]
         self.cardsThrowed = [[],[],[],[]]
+        self.cardsThrowedNoTaken = []
         self.cardOpened = []
         self.playerNumber = player_number
         self.wind =None
@@ -199,26 +200,30 @@ class Agent :
 	###      2 get   東  say "碰"              ###
 	###      update(1,2,[30,30,30],30)        ###
     ############################################# 
-    def update(self,throwAgent,takeAgent,cards,throwCard):
+    def update(self,throwAgent,takeAgent,cards,throwCard,verbose=False):
         self.cardsThrowed[throwAgent].append(throwCard)
         if takeAgent!=None:            
             self.cardsOnBoard[takeAgent].append(cards)
             if takeAgent==self.playerNumber:
                 self.handcard.append(throwCard)
                 for card in cards:
-                    #print ("handcard",self.handcard)
                     self.handcard.remove(card)
+        else:
+            self.cardsThrowedNoTaken.append(throwCard)
 
         if takeAgent != None:
             for card in cards:
                 self.cardOpened.append(card)
         else:
             self.cardOpened.append(throwCard)
-
-        #print ("throwAgent ",throwAgent, "throwcard ", throwCard)
-        #print ("list of cards throw :",self.cardsThrowed)
-        #print ("takeAgent, ",takeAgent)
-        #print ("list of cards agents take , ", self.cardsOnBoard)
+        
+        if verbose :
+            print ('Agent ',self.playerNumber)
+            print ("    throwAgent ",throwAgent, "throwcard ", throwCard)
+            print ("    過去丟出的牌: ",self.cardsThrowed[self.playerNumber])
+            print ("    過去丟出的牌(沒被拿走):",self.cardsThrowedNoTaken)
+            print ("    takeAgent, ",takeAgent)
+            print ("    打開的組合  : ", self.cardsOnBoard[self.playerNumber])
 
     ###########################
     ###   print hand card   ###
