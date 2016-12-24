@@ -7,6 +7,11 @@ SimpleDefense Agent:
     先打安全牌中機率較大的牌
     另外,這個agent並不宣告吃,碰,槓
 
+
+v.1.3 (2016.12.24)
+
+1. 新增SimpleDefense agent 
+
 v.1.2 (2016.12.17)
 
 1. 新增計算胡牌牌型分數的方法
