@@ -16,7 +16,7 @@ class RandomAgent(Agent):
         
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             return 'Throw',self.randomAction()
 
@@ -39,7 +39,7 @@ class SimpleAttackAgent(Agent):
         
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             return 'Throw',self.SimpleAttack()
 
@@ -67,13 +67,19 @@ class SimpleDefenseAgent(Agent):
         
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             throwCard = self.SimpleDefense(verbose)
             self.handcard.remove(throwCard)
             return 'Throw',throwCard
  
     def check(self,agentNum,card):
+        self.handcard.append(card)
+        result,cardCombination = self.goalTest()
+        if result:
+            return [[cardCombination,self.cardsOnBoard[self.playerNumber]], '胡', card]
+        self.handcard.remove(card)
+
         return [[],'過',card] 
     
     def SimpleDefense(self,verbose):
