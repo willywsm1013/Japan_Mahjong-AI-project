@@ -5,7 +5,6 @@ from six.moves import cPickle
 from Agent import Agent
 from BasicDefinition import CardIndex,WindIndex
 import random
-from SimpleAgent import RandomAgent,OneStepAgent
 import getScore
 class Table:
     MAX_Agent = 4
@@ -64,8 +63,8 @@ class Table:
                 for agent in self.agents :
                     agent.printHandCard()
                 
-                print ("\nAgent ",self.currentAgent,"'s action")
             if (verbose or UI) and newCard != None:
+                    print ("\nAgent ",self.currentAgent,"'s action")
                     print ('get ',CardIndex[newCard]) 
             if UI:
                 table = self.__getVisibleTable()
@@ -93,7 +92,7 @@ class Table:
 
             ###
             if verbose or UI: 
-                print ('Throw ',CardIndex[throwCard])
+                print ('Agent ',self.currentAgent,' throw ',CardIndex[throwCard])
             if UI:
                 input()
             ###
@@ -329,8 +328,6 @@ class Table:
         offset = len(visibleTable)-16
         cards = self.agents[0].getCardsOnBoard()
         cards = sum(cards,[])
-        if len(cards) != 0:
-            print (cards)
         for i in range(16) :
             if i < len(cards) :
                 card = CardIndex[cards[i]]

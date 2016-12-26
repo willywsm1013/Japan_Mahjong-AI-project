@@ -26,10 +26,10 @@ class RandomAgent(Agent):
 
 #def RandomAction(handCards):
             
-##########################
-###   One step Agent   ###
-##########################
-class OneStepAgent(Agent):
+#########################
+###   Simple Attack   ###
+#########################
+class SimpleAttackAgent(Agent):
     
     def takeAction(self,newCard,verbose):
         if newCard != None :
@@ -41,14 +41,19 @@ class OneStepAgent(Agent):
         if result:
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
-            return 'Throw',self.OneStep()
+            return 'Throw',self.SimpleAttack()
 
-    def OneStep(self):
-        infos = self.xiangtingshu(self.handcard)
-        maxUtil = max([info[3] for info in infos])
-        throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
+    def SimpleAttack(self):
+        xiangtingshu, throwCard = self.getXiangtingshu()
         self.handcard.remove(throwCard)
         return throwCard
+
+    def getXiangtingshu(self):
+        infos = self.xiangtingshu(self.handcard)
+        xiangtingshu = infos[0][1]
+        maxUtil = max([info[3] for info in infos])
+        throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
+        return xiangtingshu,throwCard
 
 ##########################
 ###   Simple Defense   ###
@@ -64,7 +69,9 @@ class SimpleDefenseAgent(Agent):
         if result:
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
-            return 'Throw',self.SimpleDefense(verbose)
+            throwCard = self.SimpleDefense(verbose)
+            self.handcard.remove(throwCard)
+            return 'Throw',throwCard
  
     def check(self,agentNum,card):
         return [[],'過',card] 
@@ -122,7 +129,8 @@ class SimpleDefenseAgent(Agent):
                 leftL = 4 - self.cardOpened.count(card-1) - self.handcard.count(card-1) ## 左邊一張
                 if leftR != 0 and leftL != 0:
                     pairs.append((leftR,leftL))
-            
+           
+            #handCardNum = [13 - len(self.cardsOnBoard[(self.playerNumber+1)%4])*3 ] 
             for pair in pairs : 
                 l1 = pair[0]
                 l2 = pair[1]
@@ -157,5 +165,4 @@ class SimpleDefenseAgent(Agent):
         if verbose :
             print ('throw ',CardIndex[throw])
         
-        self.handcard.remove(throw)
         return throw
