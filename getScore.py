@@ -34,13 +34,13 @@ def getScore( winAgent, winCards, hiddenCards , openedCards , agentWind = None ,
        
         
         if getKinds(comb)=='雀': 
-           paircards.append(comb)
+           paircards.append(tuple(comb))
         elif getKinds(comb)=='槓':
-           fourOfAKind.append(comb)
+           fourOfAKind.append(tuple(comb))
         elif getKinds(comb)=='碰':
-           threeOfAKind.append(comb)
+           threeOfAKind.append(tuple(comb))
         elif getKinds(comb)=='吃':
-           straight.append(comb)
+           straight.append(tuple(comb))
         else:
            print ("it's not a legal winCards form!")
         
@@ -87,7 +87,7 @@ def getScore( winAgent, winCards, hiddenCards , openedCards , agentWind = None ,
     if len(straight)==4:
         print ("平和（平胡)\t|\t(1番/5分)")
         score[0] = score[0]+5
-    elif not openCards:
+    elif not openedCards:
         print ("門前清\t|\t(1番/5分)")
         score[0] = score[0]+5
     else:
@@ -123,7 +123,7 @@ def getScore( winAgent, winCards, hiddenCards , openedCards , agentWind = None ,
         print ("三元牌\t|\t(1番/10分)x", len(matchesThree),"( ", listDict(matchesThree,2),")" )
             
     #2.2.1 小三元：有中發白的刻子/槓兩個及一個中發白的雀子
-    if (len(matchesThree)+len(matchesFour))==2 and paircards[0]%10==0 and paircards[0]!=30:
+    if (len(matchesThree)+len(matchesFour))==2 and paircards[0][0]%10==0 and paircards[0][0]!=30:
         print ("小三元\t|\t(5番/40分)")
         score[2] = score[2] + 40
         
@@ -135,11 +135,11 @@ def getScore( winAgent, winCards, hiddenCards , openedCards , agentWind = None ,
     #2.3 風牌 東南西北[30,31,32,33]
 
     #2.4 三風類
-    if (len(matchesThreeWind)+len(matchesFourWind))==2 and (paircards[0]<=33 and paircards[0]>=30):
+    if (len(matchesThreeWind)+len(matchesFourWind))==2 and (paircards[0][0]<=33 and paircards[0][0]>=30):
         print ("小三風\t|\t(X番/30分)")
         score[2] = score[2] + 30
     elif (len(matchesThreeWind)+len(matchesFourWind))==3:
-        if paircards[0]<=33 and paircards[0]>=30:
+        if paircards[0][0]<=33 and paircards[0][0]>=30:
             print ("小四喜\t|\t(20番/320分)")
             score[2] = score[2] + 320
         else:
@@ -151,7 +151,7 @@ def getScore( winAgent, winCards, hiddenCards , openedCards , agentWind = None ,
 
     # 2.5 字一色
     matches = [color for color in s if len(color)==14] 
-    if z and matches[0]==z:
+    if matches and z and matches[0]==z:
           print("字一色\t|\t(10番/320分)")
           score[2] = score[2]+320
     
