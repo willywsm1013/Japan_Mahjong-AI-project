@@ -4,8 +4,44 @@
 
 import re
 import random
+from evalScore import evalScore
+from itertools import *
+
+#################################################
+#           tranform to our card
+#################################################
+transform = { '5z':0, '6z':10, '7z':20,
+                  '1m':1, '1s':11, '1p':21,
+                  '2m':2, '2s':12, '2p':22,
+                  '3m':3, '3s':13, '3p':23,
+                  '4m':4, '4s':14, '4p':24,
+                  '5m':5, '5s':15, '5p':25,
+                  '6m':6, '6s':16, '6p':26,
+                  '7m':7, '7s':17, '7p':27,
+                  '8m':8, '8s':18, '8p':28,
+                  '9m':9, '9s':19, '9p':29,
+                  '1z':30, '3z':31, '2z':32, '4z':33
+                  }
+
+transform_rev = {     0:'5z', 10:'6z', 20:'7z',
+                      1:'1m', 11:'1s', 21:'1p',
+                      2:'2m', 12:'2s', 22:'2p',
+                      3:'3m', 13:'3s', 23:'3p',
+                      4:'4m', 14:'4s', 24:'4p',
+                      5:'5m', 15:'5s', 25:'5p',
+                      6:'6m', 16:'6s', 26:'6p',
+                      7:'7m', 17:'7s', 27:'7p',
+                      8:'8m', 18:'8s', 28:'8p',
+                      9:'9m', 19:'9s', 29:'9p',
+                      30:'1z', 31:'3z', 32:'2z', 33:'4z'
+                  }
+verbose = False
+
 ###############################################
-###      他創建了一個class用來表示每"一"張牌      ###
+###      他創建了一個class用來表示每"一"張牌      
+###      rank是數字（rank型態是group的object）
+###      suit是花色（suit型態是字串）
+###      可以用str(card)來拿取。ex:'1m'
 ###############################################
 class Card:
     """docstring for card"""
@@ -48,6 +84,8 @@ class Card:
 #QUETOU = ['duizi'] 雀頭就等於對子
 #DAZI = ['duizi'（對子）, 'bianzhang'（邊張）, 'kanzhang'（坎張）, 'liangmian'(兩面)] 搭子，一個面子的前身，一個已經組好的面子或是一個雀頭，
 #GUZHANG = ['guzhang'] 孤張
+######################################################################################################################
+#可以用str(group)來拿取。ex:'1m2m'
 ######################################################################################################################
 class Group(object):
     """docstring for Group
@@ -149,7 +187,7 @@ class Group(object):
             return []#已經組好了不需要有效牌
         elif self.type is 'duizi':
             return [self.cards[0]]#對子還可以組成刻子，所以回傳一張有效牌
-        elif self.type is 'bianzhang':#ex:1m2m or 8m9m
+        elif self.type is 'bianzhang':#ex:1m2m or 8m9m00000000000000000000000000000000000000000000000000000000
             if self.cards[0].get_rank() == 1:#1m2m
                 rank = '3'#代表他需要3
             else:
@@ -173,6 +211,8 @@ class Group(object):
                         if rank + self.cards[0].get_rank() in range(1, 10)]
         else:
             return []
+   
+        
 ######################################################################################
 #這個class是用來計算手牌的有效牌。
 #在之後的一個FUNCTION中，會將手牌整理為不同的牌組並創建成不同的hand_in_group，這樣就會得到不同種的胡牌牌型，以計算其有效牌。
@@ -253,11 +293,19 @@ class Hand_in_group(object):
         p: 按照面子-雀头-搭子-孤张排序并统计数量后, 即可按顺序处理
         o: 有效牌列表(Card class list)
         """
+
+        debug = False
+
         num_mianzi = 0
         num_quetou = 0
         num_dazi = 0
         num_guzhang = 0
+        if debug:
+            print ("-----------------------")
+            print ('groups:')
         for group in self.groups: # 计算各个组成部分的数量
+            if debug:
+                print (str(group),end=',')
             type_of_group = group.get_type() 
             if type_of_group in MIANZI:
                 num_mianzi += 1
@@ -267,8 +315,9 @@ class Hand_in_group(object):
                 num_dazi += 1
             else:
                 num_guzhang += 1
+        #print ()
         list_youxiaopai = [] # 用列表存放所有的有效牌
-        print ("-----------------------")
+        #print ("-----------------------")
         for group in self.groups:
             #print ("group",str(group))
             type_of_group = group.get_type() 
@@ -278,6 +327,7 @@ class Hand_in_group(object):
                   num_quetou > 1 and num_mianzi < 4): 
                 # 两个以上雀头, 且面子未完成时有对倒
                 list_youxiaopai += group.youxiaopai()
+                
             elif (type_of_group is 'duizi' and 
                   num_guzhang > 0 and num_mianzi + num_dazi < 4): 
                 # 或搭子还不足, 任意孤张都是有效牌
@@ -291,8 +341,116 @@ class Hand_in_group(object):
                 elif num_mianzi + (num_quetou - 1) + num_dazi < 4: 
                 # 面子+(对子-1)+搭子<4
                     list_youxiaopai += group.youxiaopai()
-           
+        if debug == True:
+            for pair in groups_with_youxiaopai:
+            
+                print ('group and 有效牌 pairs : ', str(pair[0]),end=' ')
+                for card in pair[1]:
+                    print(str(card),end='')
+                print ()   
+       
         return list_youxiaopai
+            
+
+    def eval_winPattern(self,xiangtingshu):
+        comb_list = []
+        #[ comb , cards_add , num_cards_add ]
+        num_quetou =0
+        comb_list = []
+        #tasktodo:要用一個eval專用的used cards
+        #tasktodo，不能把所有comb都放在同一個list裡，應該是有一張以上的有效牌的情況，就應該分別放。（不然會重複取）
+        
+        for group in self.groups: # 计算各个组成部分的数量
+            type_of_group = group.get_type() 
+            if type_of_group in QUETOU:
+                num_quetou +=1
+        #將有效牌加入原本的group形成一個面子
+        for group in self.groups: 
+            type_of_group = group.get_type()
+            if type_of_group in MIANZI:
+                possible_list = [[group,[],0]]
+                comb_list.append(possible_list)#面子就不會有其他種組合
+            elif type_of_group =='kanzhang' or type_of_group =='bianzhang':
+                youxiaopai = group.youxiaopai()
+                card = youxiaopai[0]#判斷還有沒有這張有效牌
+                card_left = CARD_LEFT[str(card)]
+                if card_left ==0:
+                    continue
+                comb = Group(group.get_cards() + youxiaopai)
+                possible_list = [[comb , youxiaopai , len(youxiaopai)]]
+                comb_list.append(possible_list)#
+                assert len(youxiaopai)==1
+            elif type_of_group == 'liangmian':
+                youxiaopai = group.youxiaopai()
+                possible_list=[]
+                for card in youxiaopai:
+                    card_left = CARD_LEFT[str(card)]
+                    if card_left ==0:
+                        continue
+                    comb = Group(group.get_cards()+[card])
+                    possible_list.append(comb) 
+
+                comb_list.append(possible_list)
+                    
+            elif type_of_group == 'duizi':
+                youxiaopai = group.youxiaopai()
+                card = youxiaopai[0]#判斷還有沒有這張有效牌
+                card_left = CARD_LEFT[str(card)]
+                if card_left ==0:
+                    continue
+                comb = Group(group.get_cards() + youxiaopai)
+                possible_list = []
+                possible_list.append([comb , youxiaopai , len(youxiaopai)])
+                possible_list.append([group, [],0])#雀頭
+                comb_list.append(possible_list)
+
+            elif type_of_group == 'guzhang':
+                if num_quetou == 0:
+                    youxiaopai = group.youxiaopai(make='quetou')
+                    card = youxiaopai[0]#判斷還有沒有這張有效牌
+                    card_left = CARD_LEFT[str(card)]
+                    if card_left ==0:
+                        continue
+                    comb = Group(group.get_cards()+youxiaopai)
+                    comb_list.append([comb , youxiaopai , len(youxiaopai)])
+                    comb2 = Group(group.get_cards()+youxiaopai + youxiaopai)
+                    comb_list.append([comb2 , youxiaopai + youxiaopai , 2])
+                else:
+                    youxiaopai = group.youxiaopai()#[1m, 2m, 3m, 4m, 5m]
+                    card = group.get_cards()#'2m'                  
+                    comb0 = Group(card + card + card)
+                    #[1m, '2m', 3m, 4m], [6m,7m,'8m',9m]
+                    tmpcombs = combinations(youxiaopai , 3 )
+                    for comb in tmpcombs:
+                        if card in comb:
+                            cardsadd = comb.remove(card)
+                            card_left = [0,0]
+                            for i,card in enumerate(cardsadd):
+                                card_left[i] = CARD_LEFT[str(card)]
+                            if 0 not in card_left:
+                                comb_list.append(Group(comb),cardsadd ,2)
+        print ('all combinations:')#所有可能可以拿來組成胡牌牌型的組合
+        for comb in comb_list:
+            print ('comb = {}, cards_add = {}, num of cards_add = {} 。'.format(str(comb[0]),comb[1],comb[2]))
+        #print ()    
+        cards_pattern = combinations(comb_list , 5)#從combinations中拿出5個來組合
+        #原本是面子的組合一定要放進去
+        winPattern = []
+        for pattern in cards_pattern:#確認他們符合胡牌條驗
+            num_cards_add = 0
+            num_quetou = 0
+            num_cards = 0
+            for comb in pattern:
+                num_cards_add += comb[2]
+                group = comb[0]
+                if group.get_type()=='duizi':
+                    num_quetou += 1
+                num_cards += len(group.get_cards())                          
+            if num_cards!=14:
+                pass
+            elif num_quetou==1 and num_cards_add<=xiangtingshu+1:
+                winPattern.append(pattern)
+        return winPattern        #回傳符合胡牌條件的pattern
 
 MIANZI = ['shunzi', 'kezi']
 QUETOU = ['duizi']
@@ -357,6 +515,31 @@ def is_samecard(card1, card2):
     """
     return str(card1) == str(card2)
 
+def simpleEval(totalcards_in_group,hand,cardsOnboard=Hand_in_group()):
+    """只將現在的手牌放入    
+    放入格式：[[1,2,3],[4,5,6],[8,8],[9,9]]
+    """
+    totallist = []
+    for group in totalcards_in_group.get_groups():
+        comb = []#也就是一個group
+        for card in group.get_cards():
+            comb.append(transform[str(card)])
+        totallist.append(comb)
+    handcards = []
+    for group in hand.get_groups():
+        comb = []
+        for card in group.get_cards():
+            comb.append(transform[str(card)])
+        handcards.append(comb)
+    boardcards =[]
+    for group in cardsOnboard.get_groups():
+        comb = []
+        for card in group.get_cards():
+            comb.append(transform[str(card)])
+        boardcards.append(comb)    
+    value = evalScore(totallist,handcards,boardcards)
+    
+    return value
 def hand_processer(hand, raw_hand=True, length=VALID_LENGTH_OF_HAND, check_input=False):
     """ process raw hand to single card list
 
@@ -405,6 +588,8 @@ def hand_to_group(hand_todo, hand_set=Hand_in_group()):
     o: 列表, 每个成员是 tuple (向听数, 牌组列表)
     """
     global list_xiangtingshu, xiangtingshu_lowest
+
+    debug = False
     if len(hand_todo) == 0: #finished（每個group都分好了）
         # 计算向听数, 如果小于等于当前最小值, 添加到列表中
         # todo: 速度优化. 直接先算一下len(), 如果len很大, 可不用排序直接return, 节约时间
@@ -469,13 +654,17 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
     global list_xiangtingshu, xiangtingshu_lowest 
     #todo: 迭代无法传递, 故暂时使用了全局变量
     
+    debug = False    
+
     list_xiangtingshu = []
     xiangtingshu_lowest = XIANGTINGSHU_MAX #init
 
     hand = hand_processer(hand, raw_hand)
+    if verbose:
+        print("---------處理成為手牌組------------------------")
     hand_to_group(hand) # 1.处理成为手牌组
-    print("---------得到最小的向聽數的牌組----------")
-    if output_notes:
+    if verbose:
+        print("---------得到丟這張牌時最小的向聽數的牌組----------")
         print('向听数:', xiangtingshu_lowest) #
     unique_hands = []#---------得到最小的向聽數的牌組（去掉重複的）----------
     for num, hand in list_xiangtingshu: # 去重 #list_xiangtingshu是一個tuple(向聽數,hand_set)
@@ -484,17 +673,15 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
                 break
         else:
             unique_hands.append(hand)
-    #me
-    i=1
-    for hand in unique_hands:
-        print ()        
-        print ("hand ",i)
-        groups = hand.get_groups()
-        for group in groups:
-            print (str(group),end='')
-        i +=1 
-    print ()           
-    unique_youxiaopais = []#---------得到最小的向聽數的牌組的有效牌（去掉重複的）---------- 
+
+    if debug:
+        for Hand_in_group in unique_hands:
+            print ('hand in group,', str(Hand_in_group))
+   
+    #print ()           
+    unique_youxiaopais = []
+    if verbose:
+        print("---------得到丟這張牌時最小的向聽數的牌組的有效牌----------") 
     for hand in unique_hands: # 输出最小向听数的牌型
         #print(hand)
         for card in hand.youxiaopai():
@@ -513,10 +700,11 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
         for card in unique_youxiaopais:
             print(card, end = '')
         print()
-    print (xiangtingshu_lowest, num_youxiaopai, unique_youxiaopais)
-    return xiangtingshu_lowest, num_youxiaopai, unique_youxiaopais
+    return xiangtingshu_lowest, num_youxiaopai, unique_youxiaopais , unique_hands
 
-def xiangtingshu_output(hand, raw_hand=True):
+
+
+def xiangtingshu_output( hand , cardsOnboard = [], raw_hand=True):
     """通过比较向听数和有效牌, 输出打某张, 向听数, 有效牌列表等何切信息
 
     i: hand 最好是14张
@@ -525,61 +713,99 @@ def xiangtingshu_output(hand, raw_hand=True):
     """
     hand = hand_processer(hand, raw_hand)#將input的凌亂的手牌排序並整理成他定義的class
     # todo: 只判断 unique card, 在重复型将可明显减少判断时间.
+    if cardsOnboard:#([[1m,2m,3m],[5m,6m,7m]]
+        #將明牌整理成他們的group的型態
+        boardCards_in_group = Hand_in_group()
+        for group in cardsOnboard:
+            groupcards=[]
+            for card in group:
 
+                cardnow = Card(card)
+                used_card(cardnow)
+                groupcards.append(cardnow)#[Card(1m),Card(2m),Card(3m)]
+
+            groupT = Group(groupcards)#        
+            boardCards_in_group.append(groupT)
+        cardsOnboard = boardCards_in_group#已經整理成Hand_in_group 的格式
     xiangtingshu_lowest = 8 
     best_cards = []
     for card in hand: 
         used_card(card)# 將手牌從牌山中去掉，碰到一個牌就將那個牌的數量-1
+    # done : 再這裡引入card open和cardsonboard，transfrom成他的class，並用used_card刪掉用過的牌
+
     # 统计出最小向听数
     card0 = ''
     for card in hand: 
         if is_samecard(card, card0):
             continue
         else:
+            if verbose:
+                print ('throwing card is', card)
             card0 = card#從手牌中選出來，要被丟掉的那張牌。
         hand_card = hand[:]
         hand_card.remove(card)         
         #將某張牌丟掉之後，去計算向聽數
-        xiangtingshu, num_youxiaopai, list_youxiaopai = cal_xiangtingshu(hand_card, raw_hand=False)
+        xiangtingshu, num_youxiaopai, list_youxiaopai, hands_in_group = cal_xiangtingshu(hand_card, raw_hand=False) 
+
+        #input()
         if xiangtingshu < xiangtingshu_lowest:
-            best_cards = [(card, xiangtingshu, num_youxiaopai, list_youxiaopai)]
+            best_cards = [(card, xiangtingshu, num_youxiaopai, list_youxiaopai , hands_in_group)]
             xiangtingshu_lowest = xiangtingshu
         elif xiangtingshu == xiangtingshu_lowest:
-            best_cards.append((card, xiangtingshu, num_youxiaopai, list_youxiaopai))
+            best_cards.append((card, xiangtingshu, num_youxiaopai, list_youxiaopai , hands_in_group))
     # 输出
     print('手牌: ', end = '')
     print_hand(hand) # 输出手牌内容
     #print(best_cards)
-    
-    for card, xiangtingshu, num_youxiaopai, list_youxiaopai in best_cards:
+    if verbose:
+        print("---------得到丟所有牌之後，最小的向聽數時的有效牌，及這些牌組的手牌牌型----------") 
+    value_list=[]
+    for card, xiangtingshu, num_youxiaopai, list_youxiaopai ,hands_in_group in best_cards:
         youxiaopai = ''
         for i in list_youxiaopai:
             youxiaopai += str(i)
-        print('打{}, 向听数{}, 有效牌{}, {}种{}张'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai))
-   
+       
+        for hand in hands_in_group:
+            value = []  
+            if verbose:
+                print('hand in group : ', str(hand))
+
+            if cardsOnboard:#翻開的牌，已經整理成Hand_in_group，因eval要算分數應該要所有的一起
+                totalcards_in_group = Hand_in_group(cardsOnboard.get_groups()+hand.get_groups())
+            else:
+                totalcards_in_group = Hand_in_group(hand.get_groups())
+            #print('evaluation winpattern....')
+            print ('simple eval ( evaluate only cards now)...')
+            if cardsOnboard:
+                value.append( simpleEval(totalcards_in_group,hand,cardsOnboard) )
+            else:
+                value.append( simpleEval(totalcards_in_group,hand) )
+
+        totalvalue = sum(value)
+        value_list.append(totalvalue)
+        print('打{}, 向听数{}, 有效牌{}, {}种{}张, eval ={}'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai,totalvalue))
+
+        '''
+            #winPattern =  totalcards_in_group.eval_winPattern(xiangtingshu)
+            #print('evaluated winpattern')
+            #for Pattern in winPattern:
+                #for comb in Pattern:
+                 #   print ('comb = {}, cards_add = {}, num of cards_add = {} 。'.format( str(comb[0]) , str(comb[1]) , comb[2]))
+        '''
+
     #my code
-    transform = { '5z':0, '6z':10, '7z':20,
-                  '1m':1, '1s':11, '1p':21,
-                  '2m':2, '2s':12, '2p':22,
-                  '3m':3, '3s':13, '3p':23,
-                  '4m':4, '4s':14, '4p':24,
-                  '5m':5, '5s':15, '5p':25,
-                  '6m':6, '6s':16, '6p':26,
-                  '7m':7, '7s':17, '7p':27,
-                  '8m':8, '8s':18, '8p':28,
-                  '9m':9, '9s':19, '9p':29,
-                  '1z':30, '3z':31, '2z':32, '4z':33
-                  }
     xiangtingshuInfo = []
-    for card, xiangtingshu, num_youxiaopai, list_youxiaopai in best_cards:
+    for card, xiangtingshu, num_youxiaopai, list_youxiaopai , hand_in_group in best_cards:
+    
         cardMapping = transform[str(card)]
         youxiaopaiMapping = []
         for i in list_youxiaopai:
             youxiaopaiMapping.append(transform[str(i)])
         xiangtingshuInfo.append([cardMapping, xiangtingshu, youxiaopaiMapping])
 
-    return xiangtingshuInfo
+    return xiangtingshuInfo,value_list
 
+    
 def main():
     """main func.
 
