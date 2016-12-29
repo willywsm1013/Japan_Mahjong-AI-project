@@ -1,37 +1,47 @@
 #-*- coding: utf-8 -*-　
 ###################################################################################
-###    getScore(贏的Agent,贏的牌組合（明+暗），暗牌組合,明牌組合，贏的Agent的門風=None,胡牌的時機)
+###    evalScore(所有牌的組合（明+暗），暗牌組合,明牌組合，贏的Agent =None(可以贏了再指定）,贏的Agent的門風=None,胡牌的時機)
+###    可以丟入可胡牌的牌型及還不能胡牌的牌型去估計其分數
+###    有些判斷要真的胡牌才能判斷，那我就不會把這個分數加進估計值
 ###    Ex: 
 ###    winCards = [[13, 14, 15], [25, 25], [30, 30, 30, 30], [14, 15, 16], [22, 23, 24]]
 ###    hiddenCards = [[13, 14, 15], [25, 25]]
 ###    openCards = [[30, 30, 30, 30], [14, 15, 16], [22, 23, 24]]
 ###    winTime = '天胡'
-###    getScore( 2 , winCards, hiddenCards , openCards )
+###    getScore(winCards, hiddenCards , openCards )
 ###################################################################################
 from BasicDefinition import CardIndex
-def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , winTime = None ,verbose=False):    
-        
+def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind = None , winTime = None ,verbose=False):    
+                
     paircards = []  # '雀'
     fourOfAKind = [] # '槓'
     threeOfAKind = [] # '碰'(刻)
     straight = [] #　'吃'
-    
+        
+    win = False #代表這個牌形是可以胡牌的牌型
+   
     others =[]
     
+    winCards = totalCards
+
     winCard =[] #no combination , easy for calculation,means total card
-    
+    #print ("The cards ", listDict(winCards,2))
+    verbose = True
 
     if verbose:
-        print ("Agent" , winAgent , "Win!!")
-        print ("The cards win is : ", winCards )
+        if win:
+            print ("Agent" , winAgent , "Win!!")
+        #print ("The cards win is : ", winCards )
         print ("The cards win is : ", listDict(winCards,2))
         print ( "Among them, hidden is ",hiddenCards , "; Opened is ,",openCards)
-        print ("----------------------------------------")    
+        print ("----------------------------------------")   
+
+    verbose = False 
     for cards in winCards:
         for card in cards:
             winCard.append(card)
-   
-    
+    #將牌的組合對類型做分類
+
     for comb in winCards:
        
         
@@ -44,8 +54,7 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
         elif getKinds(comb)=='吃':
            straight.append(tuple(comb))
         else:
-           others.append(comb)
-           print ("it's not a legal winCards form!")
+           others.append(tuple(comb))
         
     if verbose:
         
@@ -54,7 +63,10 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
            print("槓 ",fourOfAKind)
            print ("雀",paircards)
            print ("----------------------------------------")    
-   
+    if (len(straight)+len(threeOfAKind) + len(fourOfAKind)) ==4 and len(paircards)==1:
+        win = True
+    if verbose:
+        print ("win or not : ",win)
     m = []    #萬條餅字
     l = []
     p = []
@@ -90,7 +102,7 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
     if len(straight)==4:
         print ("平和（平胡)\t|\t(1番/5分)")
         score[0] = score[0]+5
-    elif not openCards:
+    elif not openCards and win:
         print ("門前清\t|\t(1番/5分)")
         score[0] = score[0]+5
     else:
@@ -101,12 +113,12 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
       
     ###  1-清一色類  ###
 
-    matches = [color for color in s if len(color)==14] 
+    matches = [color for color in s if len(color)==len(winCard)] 
     if matches:
           print ("清一色\t|\t(10番/80分)")
           score[1]=score[1]+80
     else:
-       matches = [color for color in s if color!=z and len(color)==(14-len(z))]
+       matches = [color for color in s if color!=z and len(color)==(len(winCard)-len(z))]
        if matches and len(z)!=0:
           print ("混一色\t|\t(3番/40分)")
           score[1]=score[1]+40
@@ -153,7 +165,7 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
         score[2] = score[2] + 400
 
     # 2.5 字一色
-    matches = [color for color in s if len(color)==14] 
+    matches = [color for color in s if len(color)==len(winCard)] 
     if matches and z and matches[0]==z:
           print("字一色\t|\t(10番/320分)")
           score[2] = score[2]+320
@@ -259,7 +271,6 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
     
     6.2.2 三色同刻：3個顏色的刻/槓都是同一個數字
     3番/120分
-
     '''
 
     ###  7 連續類  ###
@@ -288,24 +299,22 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
             if card%10==1 or card%10==9 or getColor(cards)=='字':
                 tmpcards.append(cards)
                 break
-    if z and len(tmpcards)==len(winCards):
+    if z and (len(threeOfAKind)+len(fourOfAKind))==4 and len(tmpcards)==len(winCards):
+        print ("混么九\t|\t(10番/100分)" ,"(",listDict(tmpcards,2),")")
+        score[7] = score[7]+100
+
+    elif z and len(tmpcards)==len(winCards):
         print ("混全么\t|\t(？番/40分)" ,"(",listDict(tmpcards,2),")")
         score[7] = score[7]+40
 
+    #8.1.4 清么九： 手牌全由么九數牌組成。別稱「清老頭」。     
+    elif not z and len(threeOfAKind)==4 and len(tmpcards)==len(winCards):
+        print ("清么九\t|\t(？番/400分)" ,"(",listDict(tmpcards,2),")")
+        score[7] = score[7]+400
     #8.1.2 純全帶邀： 每一個牌組皆帶有1或9數牌。
     elif not z and len(tmpcards)==len(winCards):
         print ("純全么\t|\t(？番/50分)" , "(",listDict(tmpcards,2),")")
         score[7] = score[7]+50
-
-    #8.1.3 混么九： 全部由1或9或字組成的4（或7個）個刻/槓（對對胡或七對子的情況），包括眼也是。
-    elif z and len(threeOfAKind)==4 and len(tmpcards)==len(winCards):
-        print ("混么九\t|\t(10番/100分)" ,"(",listDict(tmpcards,2),")")
-        score[7] = score[7]+100
-
-    #8.1.4 清么九： 手牌全由么九數牌組成。別稱「清老頭」。 
-    elif not z and len(threeOfAKind)==4 and len(tmpcards)==len(winCards):
-        print ("清么九\t|\t(？番/400分)" ,"(",listDict(tmpcards,2),")")
-        score[7] = score[7]+400
 
     ###  9 偶然類  ###
     #因胡牌的時機而加分
@@ -364,7 +373,7 @@ def getKinds(pair): # 得到此list是'槓'、'碰'、還是'吃'、還是'雀'
             return '碰'
         elif len(set(pair))==3:
             return '吃'
-    print (pair, ", it can't form and combination !")
+    #print (pair, ", it can't form any combination !")
     return None
     #########################################
     ###   傳入2或３或４張牌的list，可得到其花色  ###

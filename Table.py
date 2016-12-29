@@ -6,12 +6,13 @@ from Agent import Agent
 from BasicDefinition import CardIndex,WindIndex
 import random
 from SimpleAgent import RandomAgent,OneStepAgent
-import getScore
+from getScore import getScore
 class Table:
     MAX_Agent = 4
     currentAgent = 0
     deck = []
     throwsAndCombination = [] ## 紀錄[已經丟的牌,已翻開的組合,當局產生的組合]
+    loseReason = [[],[],[],[]]
     def __init__(self,saved=False):
         self.autoSaved = False
         if saved :
@@ -21,7 +22,8 @@ class Table:
         self.agents = []
         self.deckInitial()
         self.throwedCards=[[],[],[],[]]
-
+        self.scoreBoard = [0]*4
+    
     def addAgent(self,newAgent):
         if len(self.agents) < self.MAX_Agent :
             self.agents.append(newAgent)
@@ -40,15 +42,19 @@ class Table:
                 agent.initialHandCard(handCard)
 
     def gameStart(self,verbose = False,UI=False,pause=False):
-        print ('Game start !')
         self.currentAgent = random.randint(0,3)
         for i in range(self.MAX_Agent):
             wind = WindIndex[i]
             agent = self.agents[(i+self.currentAgent)%self.MAX_Agent]
             agent.setWind(wind)
         
-        print ('Agent ',self.currentAgent,' is first!')
-        print ('-------------------------------------')
+        ###
+        if verbose: 
+            print ('Game start !')
+            print ('Agent ',self.currentAgent,' is first!')
+            print ('-------------------------------------')
+        ###
+
         newCard = self.pickCard()
         while True:
             table = None
@@ -71,18 +77,15 @@ class Table:
             ###
 
             agent  = self.agents[self.currentAgent]
-            state ,throwCard = agent.takeAction(newCard)
+            state ,throwCard = agent.takeAction(newCard,verbose)
                                     
                             
             if state == '自摸' : 
                 if verbose :
-                    print ('Agent ',i,':',state,end=' [ ')
-                    for cards in throwCard:
-                        print ('[ ',end='')
-                        for card in cards:
-                            print (CardIndex[card],end=',')
-                        print ('\b],',end='')
-                    print ('\b]')
+                    print ('Agent ',self.currentAgent,':',state,end='')
+                    self.__printCards(throwCard)
+                cards = throwCard
+                winAgent = self.currentAgent
                 break
             
 
@@ -106,18 +109,8 @@ class Table:
                     
                     ###
                     if verbose : 
-                        print ('Agent ',i,':',tmpState,end=' [ ')
-                        if tmpState == '胡':
-                            print (tmpCards)
-                            for cards in tmpCards:
-                                print ('[ ',end='')
-                                for card in cards:
-                                    print (CardIndex[card],end=',')
-                                print ('\b],',end='')
-                        else:
-                            for card in tmpCards :
-                                print (CardIndex[card],end=',')
-                        print ('\b]')
+                        print ('Agent ',i,':',tmpState,end='')
+                        self.__printCards(tmpCards)
                         #input()
                     ###
                     assert self.__cardChecker(tmpCards,tmpState) 
@@ -129,6 +122,8 @@ class Table:
                         nextAgent = i
                         cards = tmpCards
                         state = tmpState
+                        if self.autoSaved :
+                            self.loseReason[self.currentAgent].append([cards,throwCard])
                         break
                     if tmpState == '碰':
                         assert state != '槓' and state != '碰'
@@ -188,26 +183,43 @@ class Table:
 
             ## broadcast information
             for i in range(self.MAX_Agent):
-                self.agents[i].update(self.currentAgent,takeAgent,takeCards,throwCard)
+                self.agents[i].update(self.currentAgent,takeAgent,takeCards,throwCard,verbose)
             self.currentAgent = nextAgent
-            print ('-------------------------------------')
-
+            if verbose :
+                print ('-------------------------------------')
         if state == '胡' :
             print ('贏家 : ',winAgent)
             print ('放槍 : ',loseAgent)
-            return winAgent
+            score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
+            self.scoreBoard[winAgent] += score * 3
+            if score <= 25:
+                for i in range(4):
+                    if i != winAgent :
+                        self.scoreBoard[i] -=score
+            else :
+                self.scoreBoard[loseAgent] -= (score*3 -50)
+                for i in range(4):
+                    if i != winAgent and i != loseAgent:
+                        self.scoreBoard[i] -= 25
+
+            return winAgent,loseAgent,self.scoreBoard
         elif state == '自摸':
-            print (self.currentAgent,'自摸')
-            return self.currentAgent
+            print (winAgent,'自摸')
+            score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
+            self.scoreBoard[winAgent] += score * 3
+            for i in range(4):
+                if i != winAgent :
+                    self.scoreBoard[i] -=score
+
+            return winAgent,None,self.scoreBoard
         elif state == '流局' :
             print (state)
-            return None
+            return None,None,None
         else:
             assert 0==1
-        
 
     def pickCard(self):
-        if len(self.deck) != 0:
+        if len(self.deck) > 14:
             return self.deck.pop()
         else:
             return None
@@ -239,7 +251,8 @@ class Table:
                 cards = sorted(cards)
                 if cards[0]+1 == cards[1] and cards[1]+1 == cards[2] :
                     error=False
-        elif state=='胡' and len(cards)>=5:
+        elif state=='胡' and len(cards)==2:
+            cards =cards[0]+cards[1]
             error = False
             for card in cards:
                 if len(card)==2 and card[0]==card[1]:
@@ -318,8 +331,6 @@ class Table:
         offset = len(visibleTable)-16
         cards = self.agents[0].getCardsOnBoard()
         cards = sum(cards,[])
-        if len(cards) != 0:
-            print (cards)
         for i in range(16) :
             if i < len(cards) :
                 card = CardIndex[cards[i]]
@@ -366,3 +377,14 @@ class Table:
         elif token == 3:
             space = int(len(table[0][0])/2)
             table[-1][0]=' '*space+'o'+' '*space
+    def __printCards(self,cards):
+        print (self.__cards2Chinese(cards))
+
+    def __cards2Chinese(self,Cards):
+        cards = []
+        for element in Cards:
+            if type(element) == type(list()):
+                cards.append(self.__cards2Chinese(element))
+            else:
+                cards.append(CardIndex[element])
+        return cards

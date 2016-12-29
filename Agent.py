@@ -10,6 +10,7 @@ class Agent :
         self.handcard = None
         self.cardsOnBoard = [[],[],[],[]]
         self.cardsThrowed = [[],[],[],[]]
+        self.cardsThrowedNoTaken = []
         self.cardOpened = []
         self.playerNumber = player_number
         self.wind =None
@@ -153,7 +154,7 @@ class Agent :
         assert result or cardCombination == None
         
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             return 'Throw',self.action(self.handcard,table)####
 
@@ -169,7 +170,7 @@ class Agent :
         self.handcard.append(card)
         result,cardCombination = self.goalTest()
         if result:
-            return [cardCombination+self.cardsOnBoard[self.playerNumber], '胡', card]
+            return [[cardCombination,self.cardsOnBoard[self.playerNumber]], '胡', card]
         self.handcard.remove(card)
 
         subtract = self.playerNumber - agentNum
@@ -199,26 +200,30 @@ class Agent :
 	###      2 get   東  say "碰"              ###
 	###      update(1,2,[30,30,30],30)        ###
     ############################################# 
-    def update(self,throwAgent,takeAgent,cards,throwCard):
+    def update(self,throwAgent,takeAgent,cards,throwCard,verbose=False):
         self.cardsThrowed[throwAgent].append(throwCard)
         if takeAgent!=None:            
             self.cardsOnBoard[takeAgent].append(cards)
             if takeAgent==self.playerNumber:
                 self.handcard.append(throwCard)
                 for card in cards:
-                    #print ("handcard",self.handcard)
                     self.handcard.remove(card)
+        else:
+            self.cardsThrowedNoTaken.append(throwCard)
 
         if takeAgent != None:
             for card in cards:
                 self.cardOpened.append(card)
         else:
             self.cardOpened.append(throwCard)
-
-        #print ("throwAgent ",throwAgent, "throwcard ", throwCard)
-        #print ("list of cards throw :",self.cardsThrowed)
-        #print ("takeAgent, ",takeAgent)
-        #print ("list of cards agents take , ", self.cardsOnBoard)
+        
+        if verbose :
+            print ('Agent ',self.playerNumber)
+            print ("    throwAgent ",throwAgent, "throwcard ", throwCard)
+            print ("    過去丟出的牌: ",self.cardsThrowed[self.playerNumber])
+            print ("    過去丟出的牌(沒被拿走):",self.cardsThrowedNoTaken)
+            print ("    takeAgent, ",takeAgent)
+            print ("    打開的組合  : ", self.cardsOnBoard[self.playerNumber])
 
     ###########################
     ###   print hand card   ###
@@ -241,7 +246,7 @@ class Agent :
     ##################################
     ###   calculate xiangtingshu   ###
     ##################################
-    def cardTransform(self, handcard):
+    def cardTransform(self, handcard,ingroup =False):
         outputStr = ''
         transform = { 0:'5z', 10:'6z', 20:'7z',
                       1:'1m', 11:'1s', 21:'1p',
@@ -255,19 +260,30 @@ class Agent :
                       9:'9m', 19:'9s', 29:'9p',
                       30:'1z', 31:'3z', 32:'2z', 33:'4z'
                       }
-        for card in handcard:
-            outputStr += transform[card]
+        if not ingroup:
+            for card in handcard:
+                outputStr += transform[card]
+        if ingroup:
+            cardsincomb =[]
+            for cards in handcard:
+                comb = []
+                for card in cards:
+                    comb.append(transform[card])
+                cardsincomb.append(comb)
+            outputStr = cardsincomb    
         return outputStr
 
     def xiangtingshu(self, handcard):
-        xiangtingshuInfo = mahjong.xiangtingshu_output(self.cardTransform(handcard))
+        xiangtingshuInfo,valuelist = mahjong.xiangtingshu_output(self.cardTransform(handcard),self.cardTransform(self.cardsOnBoard[self.playerNumber],True))#新增12/27 將明牌tranform之後丟入
         #[[11, 0, [15]], [14, 0, [16, 19]], ...] means [打1條,向聽數0,有效牌5條]，[打4條,向聽數0,有效牌6條9條]，...
-        #print (xiangtingshuInfo)
-        for case in xiangtingshuInfo:
+        
+        xiangtingshuInfo_tuple = (xiangtingshuInfo,valuelist)
+        for i,case in enumerate(xiangtingshuInfo):
             youxiaopaiNum = 0
             for card in case[2]:
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
                 assert youxiaopaiNum >= 0,(handcard)
             case.append(youxiaopaiNum)
-
+            case.append(valuelist[i])
+        print ('xiangtingshuInfo',xiangtingshuInfo)
         return xiangtingshuInfo
