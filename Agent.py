@@ -246,7 +246,7 @@ class Agent :
     ##################################
     ###   calculate xiangtingshu   ###
     ##################################
-    def cardTransform(self, handcard):
+    def cardTransform(self, handcard,ingroup =False):
         outputStr = ''
         transform = { 0:'5z', 10:'6z', 20:'7z',
                       1:'1m', 11:'1s', 21:'1p',
@@ -260,19 +260,30 @@ class Agent :
                       9:'9m', 19:'9s', 29:'9p',
                       30:'1z', 31:'3z', 32:'2z', 33:'4z'
                       }
-        for card in handcard:
-            outputStr += transform[card]
+        if not ingroup:
+            for card in handcard:
+                outputStr += transform[card]
+        if ingroup:
+            cardsincomb =[]
+            for cards in handcard:
+                comb = []
+                for card in cards:
+                    comb.append(transform[card])
+                cardsincomb.append(comb)
+            outputStr = cardsincomb    
         return outputStr
 
     def xiangtingshu(self, handcard):
-        xiangtingshuInfo = mahjong.xiangtingshu_output(self.cardTransform(handcard))
+        xiangtingshuInfo,valuelist = mahjong.xiangtingshu_output(self.cardTransform(handcard),self.cardTransform(self.cardsOnBoard[self.playerNumber],True))#新增12/27 將明牌tranform之後丟入
         #[[11, 0, [15]], [14, 0, [16, 19]], ...] means [打1條,向聽數0,有效牌5條]，[打4條,向聽數0,有效牌6條9條]，...
-        #print (xiangtingshuInfo)
-        for case in xiangtingshuInfo:
+        
+        xiangtingshuInfo_tuple = (xiangtingshuInfo,valuelist)
+        for i,case in enumerate(xiangtingshuInfo):
             youxiaopaiNum = 0
             for card in case[2]:
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
                 assert youxiaopaiNum >= 0,(handcard)
             case.append(youxiaopaiNum)
-
+            case.append(valuelist[i])
+        print ('xiangtingshuInfo',xiangtingshuInfo)
         return xiangtingshuInfo
