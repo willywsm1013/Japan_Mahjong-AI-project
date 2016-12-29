@@ -26,10 +26,10 @@ class RandomAgent(Agent):# 繼承自class Agent的class
 
 #def RandomAction(handCards):
             
-##########################
-###   One step Agent   ###
+#############################
+###   One step Agent      ###
 ###   利用向聽數的Agent   ###
-##########################
+#############################
 class OneStepAgent(Agent):
     
     def takeAction(self,newCard,verbose):

@@ -90,7 +90,7 @@ def getScore( winAgent, winCards, hiddenCards , openCards , agentWind = None , w
     if len(straight)==4:
         print ("平和（平胡)\t|\t(1番/5分)")
         score[0] = score[0]+5
-    elif not openedCards:
+    elif not openCards:
         print ("門前清\t|\t(1番/5分)")
         score[0] = score[0]+5
     else:
