@@ -1,13 +1,14 @@
 Update History :
+--------------------------------------
 
-SimpleDefense Agent:  
+* SimpleDefense Agent:  
     把前8張被丟出但沒被吃,碰,槓的牌當作安全牌  
     計算所有牌被吃,碰,槓的機率  
     安全牌會隨回合而變,但是機率不變,因此若存在機率很小的牌應該優先保存,  
     先打安全牌中機率較大的牌  
     另外,這個agent並不宣告吃,碰,槓  
 
-Random Agent:  
+* Random Agent:  
    隨機丟出手中的任何一張牌  
 
 
