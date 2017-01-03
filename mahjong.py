@@ -341,7 +341,7 @@ class Hand_in_group(object):
                 elif num_mianzi + (num_quetou - 1) + num_dazi < 4: 
                 # 面子+(对子-1)+搭子<4
                     list_youxiaopai += group.youxiaopai()
-        if debug == True:
+        if debug:
             for pair in groups_with_youxiaopai:
             
                 print ('group and 有效牌 pairs : ', str(pair[0]),end=' ')
@@ -429,10 +429,11 @@ class Hand_in_group(object):
                                 card_left[i] = CARD_LEFT[str(card)]
                             if 0 not in card_left:
                                 comb_list.append(Group(comb),cardsadd ,2)
-        print ('all combinations:')#所有可能可以拿來組成胡牌牌型的組合
-        for comb in comb_list:
-            print ('comb = {}, cards_add = {}, num of cards_add = {} 。'.format(str(comb[0]),comb[1],comb[2]))
-        #print ()    
+        if debug :
+            print ('all combinations:')#所有可能可以拿來組成胡牌牌型的組合
+            for comb in comb_list:
+                print ('comb = {}, cards_add = {}, num of cards_add = {} 。'.format(str(comb[0]),comb[1],comb[2]))
+            #print ()    
         cards_pattern = combinations(comb_list , 5)#從combinations中拿出5個來組合
         #原本是面子的組合一定要放進去
         winPattern = []
@@ -755,7 +756,7 @@ def xiangtingshu_output( hand , cardsOnboard = [], raw_hand=True):
             best_cards.append((card, xiangtingshu, num_youxiaopai, list_youxiaopai , hands_in_group))
     # 输出
     print('手牌: ', end = '')
-    print_hand(hand) # 输出手牌内容
+    #print_hand(hand) # 输出手牌内容
     #print(best_cards)
     if verbose:
         print("---------得到丟所有牌之後，最小的向聽數時的有效牌，及這些牌組的手牌牌型----------") 

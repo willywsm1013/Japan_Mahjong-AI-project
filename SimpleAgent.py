@@ -52,6 +52,7 @@ class SimpleAttackAgent(Agent):
         infos = self.xiangtingshu(self.handcard)
         maxUtil = max([info[3] for info in infos]) #info[3]為有效牌總數，選擇最大的那個
         throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
+        xiangtingshu = infos[0][1]
         return xiangtingshu,throwCard
 
 ##########################

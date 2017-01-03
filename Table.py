@@ -5,7 +5,6 @@ from six.moves import cPickle
 from Agent import Agent
 from BasicDefinition import CardIndex,WindIndex
 import random
-from SimpleAgent import RandomAgent,OneStepAgent
 from getScore import getScore
 class Table:
     MAX_Agent = 4
