@@ -168,7 +168,7 @@ class SimpleDefenseAgent(Agent):
         return throw
 
 class ValueAgent(Agent):
-    def takeAction(self,newCard):
+    def takeAction(self,newCard,verbose):
         if newCard!= None:
             self.handcard.append(newCard)
         result, cardCombination = self.goalTest()
@@ -177,33 +177,21 @@ class ValueAgent(Agent):
         if result:
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
-            infos = self.xiangtingshu(self.handcard)
-            xiangtingNum = infos[0][1]
-            maxValue = max([info[4] for info in infos])
-            if xiangtingNum>3:
-                return 'Throw' ,self.OneStep()
-            else:
-                return 'Throw' , self.OneStepwithScore() 
+            return 'Throw' , self.OneStepwithScore() 
 
-    
-    def OneStep(self):
-        infos = self.xiangtingshu(self.handcard)
-        maxUtil = max([info[3] for info in infos]) #info[3]為有效牌總數，選擇最大的那個
-        throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
-        self.handcard.remove(throwCard)
-        return throwCard
-        print (throwCards)
-        
-        print (len(infos))
-        for info in infos :
-            print (info)
 
     def OneStepwithScore(self):
         evaluate = True
-        infos = self.xiangtingshu(self.handcard , evaluate)
-        maxValue = max([info[4] for info in infos])
-        throwCard = random.choice([info[0] for info in infos if info[4] == maxValue])
-        self.handcard.remove(throwCard)
+        infos = self.xiangtingshu(self.handcard,evaluate)
+        if len(infos[0])==5:
+            ValueList = [info[4] for info in infos]
+            maxValue = max(ValueList)
+            throwCard = random.choice([info[0] for info in infos if info[4] == maxValue])
+            print ("score choose",maxValue)
+        else:
+            maxUtil = max([info[3] for info in infos]) #info[3]為有效牌總數，選擇最大的那個
+            throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
+        
         return throwCard
         print (throwCards)
         

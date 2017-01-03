@@ -832,7 +832,7 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
 
 
 
-def xiangtingshu_output( hand , cardsOnboard = [], raw_hand=True):
+def xiangtingshu_output( hand , cardsOnboard = [],evaluate = False,raw_hand=True):
     """通过比较向听数和有效牌, 输出打某张, 向听数, 有效牌列表等何切信息
 
     i: hand 最好是14张
@@ -892,29 +892,33 @@ def xiangtingshu_output( hand , cardsOnboard = [], raw_hand=True):
         youxiaopai = ''
         for i in list_youxiaopai:
             youxiaopai += str(i)
-        #EVALUATION
-        value = []  
-        for hand in hands_in_group:
-            
-            if verbose:
-                print('hand in group : ', str(hand))
+        
+        if  xiangtingshu<=3 and evaluate:
+            #EVALUATION
+            value = []  
+            for hand in hands_in_group:
+                
+                if verbose:
+                    print('hand in group : ', str(hand))
 
-            if cardsOnboard:#翻開的牌，已經整理成Hand_in_group，因eval要算分數應該要所有的一起
-                totalcards_in_group = Hand_in_group(cardsOnboard.get_groups()+hand.get_groups())
-            else:
-                totalcards_in_group = Hand_in_group(hand.get_groups())
-            #print('evaluation winpattern....')
-            #print ('simple eval ( evaluate only cards now)...')
-            if cardsOnboard:
-                #value.append( simpleEval(totalcards_in_group,hand,cardsOnboard) )
-                value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard))
-            else:
-                #value.append( simpleEval(totalcards_in_group,hand) )
-                value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand))
-        totalvalue = sum(value) #sumation of all 這些牌組的手牌牌型's value 
-        #EVALUATION END
-        value_list.append(totalvalue)# USE FOR RETURN, ONE THROW CARD ONE VALUE
-        print('打{}, 向听数{}, 有效牌{}, {}种{}张, eval ={}'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai,totalvalue))
+                if cardsOnboard:#翻開的牌，已經整理成Hand_in_group，因eval要算分數應該要所有的一起
+                    totalcards_in_group = Hand_in_group(cardsOnboard.get_groups()+hand.get_groups())
+                else:
+                    totalcards_in_group = Hand_in_group(hand.get_groups())
+                #print('evaluation winpattern....')
+                #print ('simple eval ( evaluate only cards now)...')
+                if cardsOnboard:
+                    #value.append( simpleEval(totalcards_in_group,hand,cardsOnboard) )
+                    value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard))
+                else:
+                    #value.append( simpleEval(totalcards_in_group,hand) )
+                    value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand))
+            totalvalue = sum(value) #sumation of all 這些牌組的手牌牌型's value 
+            #EVALUATION END
+            value_list.append(totalvalue)# USE FOR RETURN, ONE THROW CARD ONE VALUE
+            print('打{}, 向听数{}, 有效牌{}, {}种{}张, eval ={}'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai,totalvalue))
+        else:
+            print('打{}, 向听数{}, 有效牌{}, {}种{}张'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai))
 
         
     #my code
@@ -926,8 +930,10 @@ def xiangtingshu_output( hand , cardsOnboard = [], raw_hand=True):
         for i in list_youxiaopai:
             youxiaopaiMapping.append(transform[str(i)])
         xiangtingshuInfo.append([cardMapping, xiangtingshu, youxiaopaiMapping])
-
-    return xiangtingshuInfo,value_list
+    if evaluate:
+        return xiangtingshuInfo,value_list
+    else:
+        return xiangtingshuInfo,[]
 
     
 def main():
