@@ -11,7 +11,7 @@
 ###    getScore(winCards, hiddenCards , openCards )
 ###################################################################################
 from BasicDefinition import CardIndex
-def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind = None , winTime = None ,verbose=False):    
+def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind = None , winTime = None ,verbose=False,output_Han = False):    
                 
     paircards = []  # '雀'
     fourOfAKind = [] # '槓'
@@ -136,8 +136,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     #2.1番牌：有中發白的刻子/槓及該玩家其門風的刻子，每個１０分　（暫不計門風）
     if matchesThree or matchesFour:
         score[2] = score[2] + 10*(len(matchesThree)+len(matchesFour))
-        output_Hanname.append("三元牌\t|\t(1番/10分)x", len(matchesThree),"( ", listDict(matchesThree,2),")" )
-            
+        output_Hanname.append("三元牌\t|\t(1番/10分)")            
     #2.2.1 小三元：有中發白的刻子/槓兩個及一個中發白的雀子
     if (len(matchesThree)+len(matchesFour))==2 and paircards[0][0]%10==0 and paircards[0][0]!=30:
         output_Hanname.append("小三元\t|\t(5番/40分)")
@@ -301,11 +300,11 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
                 tmpcards.append(cards)
                 break
     if z and (len(threeOfAKind)+len(fourOfAKind))==4 and len(tmpcards)==len(winCards):
-        output_Hanname.append("混么九\t|\t(10番/100分)" ,"(",listDict(tmpcards,2),")")
+        output_Hanname.append("混么九\t|\t(10番/100分)" )
         score[7] = score[7]+100
 
     elif z and len(tmpcards)==len(winCards):
-        output_Hanname.append("混全么\t|\t(？番/40分)" ,"(",listDict(tmpcards,2),")")
+        output_Hanname.append("混全么\t|\t(？番/40分)" )
         score[7] = score[7]+40
 
     #8.1.4 清么九： 手牌全由么九數牌組成。別稱「清老頭」。     
@@ -351,12 +350,14 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     #40番/160分
     #（△）10.2 七對子： （四隻相同的牌，沒有開槓即可當成兩對）（七對子的分數不能加計所有要求刻槓順的胡牌方式，但可加計除此以外的）
     #7番/30分
+    if output_Han:
+        for string in output_Hanname:
+            print (string)
     verbose = False
     if verbose:
         print ("is it a win pattern?",win)
         print (score)
-        for string in output_Hanname:
-            print (string)
+        
         print ("----------------------------------------")    
     return sum(score) 
 

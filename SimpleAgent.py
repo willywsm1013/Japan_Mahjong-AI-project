@@ -183,11 +183,9 @@ class ValueAgent(Agent):
             if xiangtingNum>3:
                 return 'Throw' ,self.OneStep()
             else:
-                return 'Throw' , self.SearchValue() 
+                return 'Throw' , self.OneStepwithScore() 
 
-    def SearchValue():
-        
-        pass
+    
     def OneStep(self):
         infos = self.xiangtingshu(self.handcard)
         maxUtil = max([info[3] for info in infos]) #info[3]為有效牌總數，選擇最大的那個
@@ -201,9 +199,10 @@ class ValueAgent(Agent):
             print (info)
 
     def OneStepwithScore(self):
-        infos = self.xiangtingshu(self.handcard)
-        maxUtil = max([info[4] for info in infos])
-        throwCard = random.choice([info[0] for info in infos if info[4] == maxUtil])
+        evaluate = True
+        infos = self.xiangtingshu(self.handcard , evaluate)
+        maxValue = max([info[4] for info in infos])
+        throwCard = random.choice([info[0] for info in infos if info[4] == maxValue])
         self.handcard.remove(throwCard)
         return throwCard
         print (throwCards)
