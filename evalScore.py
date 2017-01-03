@@ -26,7 +26,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
 
     winCard =[] #no combination , easy for calculation,means total card
     #print ("The cards ", listDict(winCards,2))
-    verbose = True
+    verbose = False
 
     if verbose:
         if win:
@@ -96,31 +96,32 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
         print ("----------------------------------------")      
                 
     score = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        
+    output_Hanname = []
     ###  0-雜項  ###
         
     if len(straight)==4:
-        print ("平和（平胡)\t|\t(1番/5分)")
+        output_Hanname.append("平和（平胡)\t|\t(1番/5分)")
+        #print ("平和（平胡)\t|\t(1番/5分)")
         score[0] = score[0]+5
-    elif not openCards and win:
-        print ("門前清\t|\t(1番/5分)")
+    elif not openCards:
+        output_Hanname.append("門前清\t|\t(1番/5分)")
         score[0] = score[0]+5
     else:
         matches = [x for x in winCard if (x%10)==1 or (x%10==9) or (x%10)==0 or (x<=41 and x>=30)]
         if not matches:
-            print ("斷么九\t|\t(1番/5分)") #沒有1、9和字牌
+            output_Hanname.append("斷么九\t|\t(1番/5分)")#沒有1、9和字牌
             score[0] = score[0]+5
       
     ###  1-清一色類  ###
 
     matches = [color for color in s if len(color)==len(winCard)] 
     if matches:
-          print ("清一色\t|\t(10番/80分)")
+          output_Hanname.append("清一色\t|\t(10番/80分)")
           score[1]=score[1]+80
     else:
        matches = [color for color in s if color!=z and len(color)==(len(winCard)-len(z))]
        if matches and len(z)!=0:
-          print ("混一色\t|\t(3番/40分)")
+          output_Hanname.append("混一色\t|\t(3番/40分)")
           score[1]=score[1]+40
      
     #九子連環　需清一色　門前清且　手牌為　[１１１２３４５６７８９９９] 加上1~9任一張　
@@ -135,91 +136,91 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     #2.1番牌：有中發白的刻子/槓及該玩家其門風的刻子，每個１０分　（暫不計門風）
     if matchesThree or matchesFour:
         score[2] = score[2] + 10*(len(matchesThree)+len(matchesFour))
-        print ("三元牌\t|\t(1番/10分)x", len(matchesThree),"( ", listDict(matchesThree,2),")" )
+        output_Hanname.append("三元牌\t|\t(1番/10分)x", len(matchesThree),"( ", listDict(matchesThree,2),")" )
             
     #2.2.1 小三元：有中發白的刻子/槓兩個及一個中發白的雀子
     if (len(matchesThree)+len(matchesFour))==2 and paircards[0][0]%10==0 and paircards[0][0]!=30:
-        print ("小三元\t|\t(5番/40分)")
+        output_Hanname.append("小三元\t|\t(5番/40分)")
         score[2] = score[2] + 40
         
     #2.2.2 大三元
     elif (len(matchesThree)+len(matchesFour))==3:
-        print ("大三元\t|\t(10番/130分)")
+        output_Hanname.append("大三元\t|\t(10番/130分)")
         score[2] = score[2] + 130
       
     #2.3 風牌 東南西北[30,31,32,33]
 
     #2.4 三風類
     if (len(matchesThreeWind)+len(matchesFourWind))==2 and (paircards[0][0]<=33 and paircards[0][0]>=30):
-        print ("小三風\t|\t(X番/30分)")
+        output_Hanname.append("小三風\t|\t(X番/30分)")
         score[2] = score[2] + 30
     elif (len(matchesThreeWind)+len(matchesFourWind))==3:
         if paircards[0][0]<=33 and paircards[0][0]>=30:
-            print ("小四喜\t|\t(20番/320分)")
+            output_Hanname.append("小四喜\t|\t(20番/320分)")
             score[2] = score[2] + 320
         else:
-            print ("大三風\t|\t(X番/120分)")
+            output_Hanname.append("大三風\t|\t(X番/120分)")
             score[2] = score[2] + 120
     elif (len(matchesThreeWind)+len(matchesFourWind))==4:
-        print ("大四喜\t|\t(10番/400分)")
+        output_Hanname.append("大四喜\t|\t(10番/400分)")
         score[2] = score[2] + 400
 
     # 2.5 字一色
     matches = [color for color in s if len(color)==len(winCard)] 
     if matches and z and matches[0]==z:
-          print("字一色\t|\t(10番/320分)")
+          output_Hanname.append("字一色\t|\t(10番/320分)")
           score[2] = score[2]+320
     
     ###   3   ###
 
     # 3.1 對對和    
     if (len(threeOfAKind)+len(fourOfAKind))==4:
-        print ("對對和\t|\t(3番/30分)")
+        output_Hanname.append("對對和\t|\t(3番/30分)")
         score[3]= score[3]+30
 
     # 3.2　暗刻系列
     matches = [cards for cards in hiddenCards if getKinds(cards)=='槓' or getKinds(cards)=='碰']
     if (len(matches)==2):
-        print ("二暗刻\t|\t(X番/5分)")
+        output_Hanname.append("二暗刻\t|\t(X番/5分)")
         score[3] = score[3]+5
     elif (len(matches)==3):
-        print ("三暗刻\t|\t(1番/30分)")
+        output_Hanname.append("三暗刻\t|\t(1番/30分)")
         score[3] = score[3]+30
     elif (len(matches)==4):
-        print ("四暗刻\t|\t(10番/125分)")
+        output_Hanname.append("四暗刻\t|\t(10番/125分)")
         score[3] = score[3]+125
 
     #3.3　槓系列
     if len(fourOfAKind)==1:
-        print ("一槓\t|\t(X番/5分)")         
+        output_Hanname.append("一槓\t|\t(X番/5分)")         
         score[3] = score[3]+5    
     elif len(fourOfAKind)==2:
-        print ("二槓\t|\t(X番/20分)")         
+        output_Hanname.append("二槓\t|\t(X番/20分)")         
         score[3] = score[3]+20        
     elif len(fourOfAKind)==3:
-        print ("三槓\t|\t(10番/120分)")         
+        output_Hanname.append("三槓\t|\t(10番/120分)")         
         score[3] = score[3]+120         
     elif len(fourOfAKind)==4:
-        print ("四槓\t|\t(40番/480分)")
+        output_Hanname.append("四槓\t|\t(40番/480分)")
         score[3] = score[3]+480         
     ###  5同樣花色的順類  ###
     #待修
     #5.1.1 一般高：   有兩副一樣的順子。
     if straight:
         if len(straight)-len(set(straight))==1: #不確定可否這樣寫
-            print ("一般高\t|\t(1番/10分)")
+            output_Hanname.append("一般高\t|\t(1番/10分)")
             score[4] = score[4]+10
     #5.1.2 兩般高：   兩個一般高（有兩個成對的順子），不需門前清 
         elif len(straight)-len(set(straight))==2 and len(straight)==4:
-            print ("兩般高\t|\t(10番/60分)")
+            output_Hanname.append("兩般高\t|\t(10番/60分)")
             score[4] = score[4]+60
 
     #5.1.3 太搬高：   3個一樣的順子。
         elif len(straight)==3 and len(straight)-len(set(straight))==2:
-            print ("太搬高\t|\t(X番/120分)")
+            output_Hanname.append("太搬高\t|\t(X番/120分)")
             score[4]= score[4]+120
         elif len(straight)==4 and len(straight)-len(set(straight))==3:
-            print ("四海一家\t|\t(40番/480分)")
+            output_Hanname.append("四海一家\t|\t(40番/480分)")
             score[4]= score[4]+480
     
     ###  6 三個花色  ###
@@ -244,7 +245,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
                     if tmpcards == samplecards:
                         samecount=samecount+1
                 if samecount ==3:
-                    print ("三色同順\t|\t(3番/35分)")
+                    output_Hanname.append("三色同順\t|\t(3番/35分)")
                     score[5] = score[5]+35    
     '''
     #6.2.1 三色小同刻： 2個顏色的刻/槓，加上另一花色的眼都是同一數字
@@ -279,7 +280,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     #7.1 一條龍（一氣通貫）：同一個花色的 123 456 789三個順子。
     for color in s:
         if len(set(color))==9 and sum(set(color))==45:
-            print ("一條龍\t|\t(3番/40分)")
+            output_Hanname.append("一條龍\t|\t(3番/40分)")
             score[6]= score[6]+40        
     '''
     #7.2.1 三連刻（姊妹碰）：同一個花色的 3個連續數字的 3個刻/槓。（EX：[3 3 3] [4 4 4] [5 5 5]）
@@ -300,20 +301,20 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
                 tmpcards.append(cards)
                 break
     if z and (len(threeOfAKind)+len(fourOfAKind))==4 and len(tmpcards)==len(winCards):
-        print ("混么九\t|\t(10番/100分)" ,"(",listDict(tmpcards,2),")")
+        output_Hanname.append("混么九\t|\t(10番/100分)" ,"(",listDict(tmpcards,2),")")
         score[7] = score[7]+100
 
     elif z and len(tmpcards)==len(winCards):
-        print ("混全么\t|\t(？番/40分)" ,"(",listDict(tmpcards,2),")")
+        output_Hanname.append("混全么\t|\t(？番/40分)" ,"(",listDict(tmpcards,2),")")
         score[7] = score[7]+40
 
     #8.1.4 清么九： 手牌全由么九數牌組成。別稱「清老頭」。     
     elif not z and len(threeOfAKind)==4 and len(tmpcards)==len(winCards):
-        print ("清么九\t|\t(？番/400分)" ,"(",listDict(tmpcards,2),")")
+        output_Hanname.append("清么九\t|\t(？番/400分)" ,"(",listDict(tmpcards,2),")")
         score[7] = score[7]+400
     #8.1.2 純全帶邀： 每一個牌組皆帶有1或9數牌。
     elif not z and len(tmpcards)==len(winCards):
-        print ("純全么\t|\t(？番/50分)" , "(",listDict(tmpcards,2),")")
+        output_Hanname.append("純全么\t|\t(？番/50分)" , "(",listDict(tmpcards,2),")")
         score[7] = score[7]+50
 
     ###  9 偶然類  ###
@@ -321,26 +322,26 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     if winTime:
     #9.1.1 海底撈月：摸最後一張海底牌後自摸胡牌的加分。
         if winTime[0]=='海底撈月':
-            print ("海底撈月\t|\t(1番/10分)")
+            output_Hanname.append("海底撈月\t|\t(1番/10分)")
             score[8]=score[8]+10
     #9.1.2 海底撈魚：他家摸了海底牌之後打出的牌，放槍而胡。
         elif winTime[0] =='海底撈魚':
-            print ("海底撈魚\t|\t(1番/10分)")
+            output_Hanname.append("海底撈魚\t|\t(1番/10分)")
             score[8]=score[8]+10
     #9.2 嶺上開花（槓上開花）：槓時補牌->摸牌然後胡牌的加分。
         if winTime[1] =='槓上開花':
-            print ("槓上開花\t|\t(1番/10分)")
+            output_Hanname.append("槓上開花\t|\t(1番/10分)")
             score[8]=score[8]+10
     #（△）9.3 搶槓：（？？） 
         if winTime[2] =='搶槓':
-            print ("搶槓\t|\t(1番/10分)")
+            output_Hanname.append("搶槓\t|\t(1番/10分)")
             score[8]=score[8]+10
     #9.4.1 天胡：莊家一取完牌就胡牌的加分。
         if winTime[3] == '天胡':
-            print ("天胡\t|\t(20番/155分)")
+            output_Hanname.append("天胡\t|\t(20番/155分)")
             score[8]=score[8]+155
         elif winTime[3] == '地胡':
-            print ("地胡\t|\t(10番/155分)")
+            output_Hanname.append("地胡\t|\t(10番/155分)")
             score[8]=score[8]+155
 
     
@@ -350,8 +351,12 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     #40番/160分
     #（△）10.2 七對子： （四隻相同的牌，沒有開槓即可當成兩對）（七對子的分數不能加計所有要求刻槓順的胡牌方式，但可加計除此以外的）
     #7番/30分
+    verbose = False
     if verbose:
+        print ("is it a win pattern?",win)
         print (score)
+        for string in output_Hanname:
+            print (string)
         print ("----------------------------------------")    
     return sum(score) 
 
@@ -360,6 +365,8 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     ##################################################################
     ###   傳入2或３或４張牌的list，可得到其牌型，如果不符合任一牌型則回傳None  ###
     ##################################################################
+
+
 def getKinds(pair): # 得到此list是'槓'、'碰'、還是'吃'、還是'雀'
     #print ("card : ",pair)
     
