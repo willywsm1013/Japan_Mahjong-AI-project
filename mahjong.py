@@ -247,6 +247,11 @@ class Hand_in_group(object):
             if is_samegroup(remove_group, group): # todo: 判断两个类变量内容是否相同, 有无更好方法
                 self.groups.remove(group)
                 return
+    def ingroups(self,targetgroup):
+        for group in self.groups:
+            if is_samegroup(targetgroup,group):
+                return True
+        return False
 
     def get_groups(self): #得到手牌裡的這些GROUPS
         return self.groups
@@ -772,7 +777,7 @@ def hand_to_group(hand_todo, hand_set=Hand_in_group()):
     hand_set_new.append(Group([card_to_set]))
     hand_to_group(hand_todo[1:], hand_set_new)# 一張張处理
 
-def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
+def cal_xiangtingshu(hand, cardsOnboard,raw_hand=True, output_notes=False):
     """计算向听数的封装
 
     i: hand set 使用分类 hand_todo: Card的列表, 最好是13张
@@ -783,7 +788,7 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
     #todo: 迭代无法传递, 故暂时使用了全局变量
     
     debug = False    
-
+    verbose = False
     list_xiangtingshu = []
     xiangtingshu_lowest = XIANGTINGSHU_MAX #init
 
@@ -799,16 +804,26 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
         for unique_hand in unique_hands:
             if is_samehandingroup(hand, unique_hand):#是用hand_to_group object中的__str__做比較
                 break
+            elif cardsOnboard:# if this handset doesn't have group in boardgroup  ,去掉
+                boardgroups = cardsOnboard.get_groups()
+                b=False
+                for group in boardgroups:
+                    if not unique_hand.ingroups(group):
+                        print (str(group),"not in ",str(unique_hand))
+                        b = True
+
+                if b:
+                    break
         else:
             unique_hands.append(hand)
+    debug = False
 
-    if debug:
-        for Hand_in_group in unique_hands:
-            print ('hand in group,', str(Hand_in_group))
-   
+                  
+    debug = False
     #print ()           
     unique_youxiaopais = []
     if verbose:
+
         print("---------得到丟這張牌時最小的向聽數的牌組的有效牌----------") 
     for hand in unique_hands: # 输出最小向听数的牌型
         #print(hand)
@@ -832,7 +847,7 @@ def cal_xiangtingshu(hand, raw_hand=True, output_notes=False):
 
 
 
-def xiangtingshu_output( hand , cardsOnboard = [],evaluate = False,raw_hand=True):
+def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
     """通过比较向听数和有效牌, 输出打某张, 向听数, 有效牌列表等何切信息
 
     i: hand 最好是14张
@@ -841,14 +856,17 @@ def xiangtingshu_output( hand , cardsOnboard = [],evaluate = False,raw_hand=True
     """
     hand = hand_processer(hand, raw_hand)#將input的凌亂的手牌排序並整理成他定義的class
     # todo: 只判断 unique card, 在重复型将可明显减少判断时间.
+    cardsOnboardList = []
     if cardsOnboard:#([[1m,2m,3m],[5m,6m,7m]]
         #將明牌整理成他們的group的型態
+        
         boardCards_in_group = Hand_in_group()
         for group in cardsOnboard:
             groupcards=[]
             for card in group:
-
+                
                 cardnow = Card(card)
+                cardsOnboardList.append(cardnow)
                 used_card(cardnow)
                 groupcards.append(cardnow)#[Card(1m),Card(2m),Card(3m)]
 
@@ -866,14 +884,19 @@ def xiangtingshu_output( hand , cardsOnboard = [],evaluate = False,raw_hand=True
     for card in hand: 
         if is_samecard(card, card0):
             continue
+        elif cardsOnboard:
+            if card in cardsOnboardList:
+                print ('cards on board',cardsOnboardList)
+                continue # can't throw card on board
         else:
             if verbose:
                 print ('throwing card is', card)
             card0 = card#從手牌中選出來，要被丟掉的那張牌。
-        hand_card = hand[:]
-        hand_card.remove(card)         
+        hand_card = hand[:]# card list
+        hand_card.remove(card)
+        total_card = hand_card + cardsOnboardList         
         #將某張牌丟掉之後，去計算向聽數
-        xiangtingshu, num_youxiaopai, list_youxiaopai, hands_in_group = cal_xiangtingshu(hand_card, raw_hand=False) 
+        xiangtingshu, num_youxiaopai, list_youxiaopai, hands_in_group = cal_xiangtingshu(total_card, cardsOnboard,raw_hand=False) 
 
         #input()
         if xiangtingshu < xiangtingshu_lowest:
@@ -948,7 +971,7 @@ def main():
     except ValueError:
         input_hand = input('input hand: ')
 
-    xiangtingshu_output(input_hand)
+    xiangtingshu_output(input_hand,[])
 
 if __name__ == '__main__':
     main()
