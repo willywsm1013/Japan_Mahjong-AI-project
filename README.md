@@ -1,5 +1,11 @@
 Update History :
 
+Eval WinPattern:
+    計算當局牌面可能的胡牌牌型
+    implementy在mahjong.py之中
+    丟進EvalScore做計算並回傳分數
+    需要準確的向聽數，發現向聽數在有明牌的時候會不准
+
 SimpleDefense Agent:
     把前8張被丟出但沒被吃,碰,槓的牌當作安全牌
     計算所有牌被吃,碰,槓的機率
