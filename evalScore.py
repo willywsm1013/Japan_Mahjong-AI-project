@@ -138,7 +138,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
         print ("三元牌\t|\t(1番/10分)x", len(matchesThree),"( ", listDict(matchesThree,2),")" )
             
     #2.2.1 小三元：有中發白的刻子/槓兩個及一個中發白的雀子
-    if (len(matchesThree)+len(matchesFour))==2 and paircards[0][0]%10==0 and paircards[0][0]!=30:
+    if (len(matchesThree)+len(matchesFour))==2 and len(paircards) != 0 and paircards[0][0]%10==0 and paircards[0][0]!=30:
         print ("小三元\t|\t(5番/40分)")
         score[2] = score[2] + 40
         
@@ -150,7 +150,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     #2.3 風牌 東南西北[30,31,32,33]
 
     #2.4 三風類
-    if (len(matchesThreeWind)+len(matchesFourWind))==2 and (paircards[0][0]<=33 and paircards[0][0]>=30):
+    if (len(matchesThreeWind)+len(matchesFourWind))==2 and len(paircards) != 0 and (paircards[0][0]<=33 and paircards[0][0]>=30):
         print ("小三風\t|\t(X番/30分)")
         score[2] = score[2] + 30
     elif (len(matchesThreeWind)+len(matchesFourWind))==3:
