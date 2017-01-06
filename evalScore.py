@@ -9,6 +9,8 @@
 ###    openCards = [[30, 30, 30, 30], [14, 15, 16], [22, 23, 24]]
 ###    winTime = '天胡'
 ###    getScore(winCards, hiddenCards , openCards )
+###    author : Sophia
+###    last modified : 2017/01/06
 ###################################################################################
 from BasicDefinition import CardIndex
 def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind = None , winTime = None ,verbose=False,output_Han = False):    
@@ -26,17 +28,17 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
 
     winCard =[] #no combination , easy for calculation,means total card
     #print ("The cards ", listDict(winCards,2))
-    verbose = False
+    #verbose = True
 
     if verbose:
         if win:
             print ("Agent" , winAgent , "Win!!")
         #print ("The cards win is : ", winCards )
         print ("The cards win is : ", listDict(winCards,2))
-        print ( "Among them, hidden is ",hiddenCards , "; Opened is ,",openCards)
+        #print ( "Among them, hidden is ",hiddenCards , "; Opened is ,",openCards)
         print ("----------------------------------------")   
 
-    verbose = False 
+    #verbose = False 
     for cards in winCards:
         for card in cards:
             winCard.append(card)
@@ -67,22 +69,27 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
         win = True
     if verbose:
         print ("win or not : ",win)
-    m = []    #萬條餅字
-    l = []
-    p = []
-    z = []
+    m, mg = [],[]    #萬條餅字
+    l, lg = [],[]    #not in group , in group
+    p, pg = [],[]
+    z, zg = [],[]
     for cards in winCards:
-        for card in cards:
-            if 1 <= card <= 9:
-                m.append(card)
-            elif 11 <= card <=19:
-                l.append(card)
-            elif 21 <= card <= 29:
-                p.append(card)
-            else:
-                z.append(card)
-    s=[m,l,p,z]
+        if getColor(cards)=='萬':
+            mg.append(tuple(cards))
+        elif getColor(cards)=='條':
+            lg.append(tuple(cards))
+        elif getColor(cards)=='餅':
+            pg.append(tuple(cards))
+        else:
+            zg.append(tuple(cards))
         
+    m = [card for cards in mg for card in cards]
+    l = [card for cards in lg for card in cards]
+    p = [card for cards in pg for card in cards]
+    z = [card for cards in zg for card in cards]
+    s=[m,l,p,z]
+    sg = [mg,lg,pg,zg]
+
     if verbose:
         print ("card classfied in colors : ")
         print (s)
@@ -225,11 +232,19 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     ###  6 三個花色  ###
     #胡牌時需有三個顏色的牌組
     
+
+
     cardsColor = [getColor(comb) for comb in winCards ]
+
+    mTcards = [cards  for cards in mg if cards in threeOfAKind]
+    mFcards = [cards  for cards in mg if cards in fourOfAKind]
+    lTcards = [cards  for cards in lg if cards in threeOfAKind]
+    lFcards = [cards  for cards in lg if cards in fourOfAKind]
+    pTcards = [cards  for cards in pg if cards in threeOfAKind]
+    pFcards = [cards  for cards in pg if cards in fourOfAKind]
+
     if len(set(cardsColor))>=3:
-       
-            
-    
+           
     #6.1 三色同順（三相逢、三姊妹）：3個顏色的順子都是同一個數字 (3個顏色、3個順子、3個順子同個數字)
     #3番/35分
         straightColor = []
@@ -246,32 +261,56 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
                 if samecount ==3:
                     output_Hanname.append("三色同順\t|\t(3番/35分)")
                     score[5] = score[5]+35    
-    '''
-    #6.2.1 三色小同刻： 2個顏色的刻/槓，加上另一花色的眼都是同一數字
-    #？/30分
-        if (len(threeOfAKind)+len(fourOfAKind))>=2:
-            cardsColor =[]
-            tmpcards = []
-            tmpcardsNum = []
-            tmpcardsKind = []
-            for cards in winCards:
-                if not getKinds(cards)=='順'：
-                    cardsColor.append(getColor(cards))
-                    tmpcardsKind.append(getKinds(cards))
-                    tmpcards.append(cards)
-                    tmpcardsNum.append([card%10 for card in cards])
-            if '雀' in tmpcardsKind:
-                            
-        fourColor = []
-        threeNumber = []
-        fourNumber = []
-        pairColor =[]
-        pairNumber =[]
-        
     
-    6.2.2 三色同刻：3個顏色的刻/槓都是同一個數字
-    3番/120分
-    '''
+    #6.2.1 三色小同刻： 2個顏色的刻/槓，加上另一花色的眼都是同一數字
+    #(2個以上的刻/槓，有雀，有2個刻/槓和雀都是同一個數字，這兩個同一個數字的刻/槓中有2個以上的花色，雀和這兩個花色不同)
+    #？/30分
+
+        if (len(threeOfAKind)+len(fourOfAKind))>=2:
+            if paircards:
+                for pair in paircards:
+                    if not getColor(pair)=='字':
+                        paircardsNum = pair[0]%10
+                        threeNumber = [cards[0]%10 for cards in threeOfAKind]
+                        fourNumber = [cards[0]%10 for cards in fourOfAKind]
+                        samecount = 0
+                        sameindexT = []
+                        sameindexF = []
+                        for i,num in enumerate(threeNumber):
+                            if num == paircardsNum:
+                                samecount +=1
+                                sameindexT.append(i)
+                        for i,num in enumerate(fourNumber):
+                            if num == paircardsNum:
+                                samecount +=1
+                                sameindexF.append(i)
+                        assert samecount<=2
+                        if samecount==2:
+                            uni_threeColor = list(set([ getColor(cards)  for i,cards in enumerate(threeOfAKind) if i in sameindexT]))
+                            uni_fourColor = list(set([ getColor(cards) for i,cards in enumerate(fourOfAKind)  if i in sameindexF]))
+                            uni_pairColor = getColor(pair)
+                            
+                            Color_TplusF = set(uni_threeColor+uni_fourColor)
+                            Color_TplusFplusP = set(uni_fourColor+uni_threeColor+[uni_pairColor])
+                            if len(Color_TplusF)==2 and len(Color_TplusFplusP)==3:
+                                if "三色小同刻\t|\t(？番/30分)" not in output_Hanname:
+                                    output_Hanname.append("三色小同刻\t|\t(？番/30分)")
+                                    score[5] = score[5]+30
+        '''
+        
+        '''       
+        
+        if (len(threeOfAKind)+len(fourOfAKind))>=3:
+    #6.2.2 三色同刻：3個顏色的刻/槓都是同一個數字
+    #3番/120分           
+            if (mTcards or mFcards) and (lTcards or lFcards) and (pTcards or pFcards):
+                mcardsnum = [cards[0]%10 for cards in (mTcards+mFcards)]
+                lcardsnum = [cards[0]%10 for cards in (lTcards+lFcards)]
+                pcardsnum = [cards[0]%10 for cards in (pTcards+pFcards)]
+                for num in mcardsnum:
+                    if num in lcardsnum and num in pcardsnum:
+                        output_Hanname.append("三色同刻\t|\t(3番/120分)")
+                        score[5] = score[5]+120
 
     ###  7 連續類  ###
     #同一個花色內數字連續的三組或四組牌
@@ -281,16 +320,59 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
         if len(set(color))==9 and sum(set(color))==45:
             output_Hanname.append("一條龍\t|\t(3番/40分)")
             score[6]= score[6]+40        
-    '''
+    
     #7.2.1 三連刻（姊妹碰）：同一個花色的 3個連續數字的 3個刻/槓。（EX：[3 3 3] [4 4 4] [5 5 5]）
-    for color in s:
-        if (len(threeOfAKind)+len(fourOfAKind))==3:
-           print ("三連刻") 
-           print ("")
-    10番/100分
-    7.2.2 四連刻（）：同一個花色的 4個連續數字的 4個刻/槓。
-    40台/200分    
-    '''
+    if len(mTcards+mFcards)==3:
+        #同一個花色 has 3個刻/槓 
+        mcardsnum = [cards[0]%10 for cards in (mTcards+mFcards)]
+        mcardsnum.sort()
+        assert len(mcardsnum)==3
+        if getKinds(mcardsnum)=='吃': # [3,4,5]
+            output_Hanname.append("三連刻\t|\t(10番/100分)")
+            score[6]= score[6]+100
+    elif len(lTcards+lFcards)==3:
+        lcardsnum = [cards[0]%10 for cards in (lTcards+lFcards)]
+        lcardsnum.sort()
+        assert len(lcardsnum)==3
+        if getKinds(lcardsnum)=='吃':
+            output_Hanname.append("三連刻\t|\t(10番/100分)")
+            score[6]= score[6]+100
+    elif len(pTcards+pFcards)==3:
+        pcardsnum = [cards[0]%10 for cards in (pTcards+pFcards)]
+        pcardsnum.sort()
+        assert len(lcardsnum)==3
+        if getKinds(lcardsnum)=='吃': # [3,4,5]
+            output_Hanname.append("三連刻\t|\t(10番/100分)")
+            score[6]= score[6]+100
+
+    #7.2.2 四連刻（）：同一個花色的 4個連續數字的 4個刻/槓。
+    #40台/200分   
+    elif len(mTcards+mFcards)==4:
+        #同一個花色 has 4個刻/槓 
+        mcardsnum = [cards[0]%10 for cards in (mTcards+mFcards)]
+        mcardsnum.sort()
+        assert len(mcardsnum)==4
+        if mcardsnum[0] == mcardsnum[1]-1 and mcardsnum[1] == mcardsnum[2]-1 and mcardsnum[2] == mcardsnum[3]-1:
+            output_Hanname.append("四連刻\t|\t(40台/200分)")
+            score[6]= score[6]+200
+    elif len(lTcards+lFcards)==4:
+        lcardsnum = [cards[0]%10 for cards in (lTcards+lFcards)]
+        lcardsnum.sort()
+        assert len(lcardsnum)==4
+        if lcardsnum[0] == lcardsnum[1]-1 and lcardsnum[1] == lcardsnum[2]-1 and lcardsnum[2] == lcardsnum[3]-1:
+            output_Hanname.append("四連刻\t|\t(40台/200分)")
+            score[6]= score[6]+200
+    elif len(pTcards+pFcards)==4:
+        pcardsnum = [cards[0]%10 for cards in (pTcards+pFcards)]
+        pcardsnum.sort()
+        assert len(pcardsnum)==4
+        if pcardsnum[0] == pcardsnum[1]-1 and pcardsnum[1] == pcardsnum[2]-1 and pcardsnum[2] == pcardsnum[3]-1:
+            output_Hanname.append("四連刻\t|\t(40台/200分)")
+            score[6]= score[6]+200
+    #10番/100分
+    #7.2.2 四連刻（）：同一個花色的 4個連續數字的 4個刻/槓。
+    #40台/200分    
+    
     ###  8 么九類  ###
     #8.1.1 混全么： 每一個牌組皆帶有1或9或字牌。
     tmpcards = []    
@@ -417,9 +499,9 @@ openCards = [[26, 26, 26, 26], [14, 15, 16], [22, 23, 24]]
 '''
 
 if __name__ == '__main__':
-    winCards=[[10, 10, 10], [20, 20, 20], [0, 0, 0], [30, 30, 30], [31, 31]]
-    hiddenCards=[[10, 10, 10], [20, 20, 20], [0, 0, 0], [30, 30, 30], [31, 31]]
+    winCards=[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5]]
+    hiddenCards=[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5]]
     openCards= []
-    score = getScore( 2 , winCards, hiddenCards , openCards )
+    score = evalScore( winCards, hiddenCards , openCards )
 
     print ("Scores = ",score)
