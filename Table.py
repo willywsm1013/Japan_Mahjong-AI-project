@@ -194,8 +194,9 @@ class Table:
             if verbose :
                 print ('-------------------------------------')
         if state == '胡' :
-            print ('贏家 : ',winAgent)
-            print ('放槍 : ',loseAgent)
+            if verbose:
+                print ('贏家 : ',winAgent)
+                print ('放槍 : ',loseAgent)
             score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
             self.scoreBoard[winAgent] += score * 3
             if score <= 25:
@@ -212,7 +213,8 @@ class Table:
             
             return winAgent,loseAgent,self.scoreBoard
         elif state == '自摸':
-            print (winAgent,'自摸')
+            if verbose:
+                print (winAgent,'自摸')
             score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
             self.scoreBoard[winAgent] += score * 3
             for i in range(4):
@@ -224,7 +226,8 @@ class Table:
 
             return winAgent,None,self.scoreBoard
         elif state == '流局' :
-            print (state)
+            if verbose:
+                print (state)
             
             self.win = None
             self.lose= None

@@ -7,13 +7,14 @@ from six.moves import cPickle
 
 class QLearningAgent(Agent):
     
-    def __init__(self,player_number,epsilon=0.8,discount=0.7,alpha=0.5,mode='test',pickle_name = None,lr_decay_fn = None):
+    def __init__(self,player_number,epsilon=0.5,discount=0.8,alpha=1e-4,mode='test',pickle_name = None,lr_decay_fn = None):
         Agent.__init__(self,player_number)
         self.epsilon = epsilon
         self.discount = discount
         self.alpha = alpha
         self.setLearningTarget()
         self.lr_decay = lr_decay_fn
+        print (lr_decay_fn)
         if mode == 'train':
             self.train = True
         elif mode == 'test':
@@ -145,8 +146,10 @@ class QLearningAgent(Agent):
             self.epsilon = epsilon
     
     def lrDecay(self):
+        print ('learning rate :',self.alpha,' -> ',end='')
         if self.lr_decay != None:
             self.alpha = self.lr_decay(self.alpha)
+        print (self.alpha)
     
     #########################################
     ###   don't modified function above   ###
@@ -337,6 +340,9 @@ class SelfLearningAgent(WeightLearningAgent):
         handSet = set(handcard)
         cardsUnSeen  = state [2]
 
+        ###############################
+        ###   從下面開始找feature   ###
+        ###############################
         for cards in cardsOnBoard :
             if len(cards) == 4:
                 feats['槓'] +=1
@@ -350,6 +356,7 @@ class SelfLearningAgent(WeightLearningAgent):
         
         cardsNeeds = [0]*34
         feats['明牌'] = len(cardsOnBoard)
+        
         for card in handSet :
             ##############################################################
             ### cardExist :
@@ -360,16 +367,32 @@ class SelfLearningAgent(WeightLearningAgent):
             if cardExist[0] == 1 :
                 if int(card/10) == 3 or card%10 ==0 :
                     feats['孤張'] += 1
-                elif card % 10 == 1 and not cardExist[1]:
+                    #feats['孤張湊組'] +=cardsUnSeen[card]
+                    cardsNeeds[card] = 1
+                elif card % 10 == 1 :
+                    if not cardExist[1] and not cardExist[2]:
+                        feats['孤張'] += 1
+                    #feats['孤張湊組'] += cardsUnSeen[card+1]
+                    #cardsNeeds[card+1] = 1
+                elif card%10 == 9 :
+                    if not cardExist[-1] and not cardExist[-2]:
+                        feats['孤張'] += 1
+                    #feats['孤張湊組'] +=cardsUnSeen[card-1]
+                    #cardsNeeds[card-1] = 1
+                elif card%10 == 2:
+                    if not cardExist[-1] and not cardExist[1] and not cardExist[2] : 
+                        feats['孤張'] += 1
+                    #feats['孤張湊組'] +=cardsUnSeen[card-1] + cardsUnSeen[card+1]
+                    #cardsNeeds[card+1] = 1
+                    #cardsNeeds[card-1] = 1
+                elif card%10 == 8:
+                    if not cardExist[1] and not cardExist[-1] and not cardExist[-2]:
+                        feats['孤張'] += 1
+                elif not cardExist[-2] and not cardExist[-1] and not cardExist[1] and not cardExist[2]:
                     feats['孤張'] += 1
-                elif card%10 == 9 and not cardExist[-1]:
-                    feats['孤張'] += 1
-                elif not cardExist[-1] and not cardExist[1]: 
-                    feats['孤張'] += 1
-
-            if cardExist[0]:
-                feats['雀']   += 1
-                feats['對子'] += cardsUnSeen[card] 
+            
+            if cardExist[0] == 2:     
+                feats['雀'] += 1
                 cardsNeeds[card] = 1
             if cardExist[0] == 3:
                 feats['刻'] += 1
@@ -381,25 +404,24 @@ class SelfLearningAgent(WeightLearningAgent):
                     feats['順'] += 1 
                 ## 12
                 if  card % 10 == 1 and cardExist[1] and not cardExist[2]:
-                    feats['邊張'] += cardsUnSeen[card+2]
+                    #feats['邊張'] += cardsUnSeen[card+2]
                     cardsNeeds[card+2] = 1
                 ## 89
                 if  card % 10 == 9 and cardExist[-1] and not cardExist[-2]:
-                    feats['邊張'] += cardsUnSeen[card-2]
+                    #feats['邊張'] += cardsUnSeen[card-2]
                     cardsNeeds[card-2] = 1
                 ## 兩面
                 if  card % 10 > 1 and card % 10 < 8 and cardExist[1]:
                     if not cardExist[-1] and not cardExist[2]:
-                        feats['兩面'] += cardsUnSeen[card-1]+cardsUnSeen[card+2]
+                        #feats['兩面'] += cardsUnSeen[card-1]+cardsUnSeen[card+2]
                         cardsNeeds[card-1] = 1
                         cardsNeeds[card+2] = 1
                 ## 坎張
-                if  card %10 < 8 and not cardExist[1] and cardExist[2]:
-                    feats['坎張'] += cardsUnSeen[card+1]
+                if  card%10 < 8 and not cardExist[1] and cardExist[2]:
+                    #feats['坎張'] += cardsUnSeen[card+1]
                     cardsNeeds[card+1] = 1
-        
-        feats['需要牌數'] =sum([i*j for (i, j) in zip(cardsNeeds, cardsUnSeen)])
-
+            
+        #feats['有效牌'] = sum(i*j for i,j in zip(cardsUnSeen, cardsNeeds))
         
         return feats
 
