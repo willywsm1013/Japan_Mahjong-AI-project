@@ -274,8 +274,9 @@ class Agent :
             outputStr = cardsincomb    
         return outputStr
 
-    def xiangtingshu(self, handcard):
-        xiangtingshuInfo,valuelist = mahjong.xiangtingshu_output(self.cardTransform(handcard),self.cardTransform(self.cardsOnBoard[self.playerNumber],True))#新增12/27 將明牌tranform之後丟入
+    def xiangtingshu(self, handcard , e = False):
+        p = self.playerNumber
+        xiangtingshuInfo,valuelist = mahjong.xiangtingshu_output(self.cardTransform(handcard),self.cardTransform(self.cardsOnBoard[p],True),evaluate=e)#新增12/27 將明牌tranform之後丟入
         #[[11, 0, [15]], [14, 0, [16, 19]], ...] means [打1條,向聽數0,有效牌5條]，[打4條,向聽數0,有效牌6條9條]，...
         
         xiangtingshuInfo_tuple = (xiangtingshuInfo,valuelist)
@@ -285,8 +286,9 @@ class Agent :
                 youxiaopaiNum += (4 - self.cardOpened.count(card) - handcard.count(card))
                 assert youxiaopaiNum >= 0,(handcard)
             case.append(youxiaopaiNum)
-            case.append(valuelist[i])
-        print ('xiangtingshuInfo',xiangtingshuInfo)
+            if valuelist:
+                case.append(valuelist[i])
+        #print ('xiangtingshuInfo',xiangtingshuInfo)
         return xiangtingshuInfo
     ######################################
     ###   一局遊戲結束呼叫的function   ###

@@ -4,7 +4,7 @@ from getScore import getScore
 import sys
 import operator
 Verbose = False
-UI = False
+UI = True
 
 
 table = Table(True)
