@@ -364,63 +364,100 @@ class SelfLearningAgent(WeightLearningAgent):
             ###          card-2  |  card-1  |  card  |  card+1  |  card+2  
             ##############################################################
             cardExist = {i:handcard.count(card+i) for i in range(-2,3)}
+            
+            ## 廣義孤張判定
             if cardExist[0] == 1 :
                 if int(card/10) == 3 or card%10 ==0 :
                     feats['孤張'] += 1
-                    #feats['孤張湊組'] +=cardsUnSeen[card]
-                    cardsNeeds[card] = 1
                 elif card % 10 == 1 :
+                    ## 手牌沒有2 3
                     if not cardExist[1] and not cardExist[2]:
                         feats['孤張'] += 1
-                    #feats['孤張湊組'] += cardsUnSeen[card+1]
-                    #cardsNeeds[card+1] = 1
+                    ## 手牌 有2但3以被拿完 或 有3但2以被拿完
+                    elif (not cardExist[1] and not cardsUnSeen[card+1]) or (not cardExist[2] and not cardsUnSeen[card+2]):
+                        feats['孤張'] += 1
+                        
                 elif card%10 == 9 :
+                    ## 手牌沒有7 8
                     if not cardExist[-1] and not cardExist[-2]:
                         feats['孤張'] += 1
-                    #feats['孤張湊組'] +=cardsUnSeen[card-1]
-                    #cardsNeeds[card-1] = 1
+                    ## 手牌 有7但8以被拿完 或 有8但7以被拿完
+                    elif (not cardExist[-1] and not cardsUnSeen[card-1]) or (not cardExist[-2] and not cardsUnSeen[card-2]):
+                        feats['孤張'] += 1
+                
                 elif card%10 == 2:
-                    if not cardExist[-1] and not cardExist[1] and not cardExist[2] : 
-                        feats['孤張'] += 1
-                    #feats['孤張湊組'] +=cardsUnSeen[card-1] + cardsUnSeen[card+1]
-                    #cardsNeeds[card+1] = 1
-                    #cardsNeeds[card-1] = 1
+                    ## 手牌沒有1 4
+                    if not cardExist[-1] and not cardExist[2] : 
+                        ## 沒有3
+                        if not cardExist[1] :
+                            feats['孤張'] += 1
+                        ## 1 4 已被拿完
+                        elif not cardsUnSeen[card-1] and not cardsUnSeen[card+2]:
+                            feats['孤張'] += 1
+                            
+                    ## 有1或4沒3,但3已被拿完
+                    elif (cardExist[-1] or cardExist[2]) and not cardExist[1] and not cardsUnSeen[card+1]: 
+                         feats['孤張'] += 1
                 elif card%10 == 8:
-                    if not cardExist[1] and not cardExist[-1] and not cardExist[-2]:
+                    ## 手牌沒有6 9
+                    if not cardExist[-2] and not cardExist[1]:
+                        ## 手牌沒有 7
+                        if not cardExist[-1]:
+                            feats['孤張'] += 1
+                        ## 6 9 已被拿完
+                        elif not cardsUnSeen[card-2] and not cardsUnSeen[card+1]:
+                            feats['孤張'] += 1
+                    ## 有6或9沒7,但7已被拿完
+                    elif (cardExist[-2] or cardExist[1]) and not cardExist[-1]and not cardsUnSeen[card-1]: 
+                         feats['孤張'] += 1
+                else: ## 3 4 5 6 7  
+                    if not cardExist[-2] and not cardExist[-1] and not cardExist[1] and not cardExist[2]:
                         feats['孤張'] += 1
-                elif not cardExist[-2] and not cardExist[-1] and not cardExist[1] and not cardExist[2]:
-                    feats['孤張'] += 1
-            
+                    else:
+                        combination = [cardExist[i]*cardExist[i+1]*cardExist[i+2] for i in range(-2,1)]
+                        if sum(combination) == 0:
+                            found = False
+                            if (cardExist[-2] and cardsUnSeen[card-1]) or (cardExist[-1] and cardsUnSeen[card-2]):
+                                found = True
+                            elif (cardExist[-1] and cardsUnSeen[card+1]) or (cardExist[1] and cardsUnSeen[card-1]):
+                                found = True
+                            elif (cardExist[1] and cardsUnSeen[card+2]) or (cardExist[2] and cardsUnSeen[card+1]):
+                                found = True
+                            if not found :
+                                feats['孤張'] += 1
+            #feats['複製'] += cardsUnSeen[card]                    
             if cardExist[0] == 2:     
-                feats['雀'] += 1
-                cardsNeeds[card] = 1
+                if cardsUnSeen[card]:
+                    feats['成刻對'] += cardsUnSeen[card]
+                else :
+                    feats['不成刻對'] += 1
+            ## 檢查刻 
             if cardExist[0] == 3:
                 feats['刻'] += 1
+            ## 檢查槓
             if cardExist[0] == 4:
                 feats['槓'] += 1 
-            
+            ### 檢查順
             if int(card/10) < 3 and card % 10 != 0:
                 if card %10 < 8 and cardExist[1] and cardExist[2]:
                     feats['順'] += 1 
-                ## 12
+                ## 邊張12
                 if  card % 10 == 1 and cardExist[1] and not cardExist[2]:
-                    #feats['邊張'] += cardsUnSeen[card+2]
-                    cardsNeeds[card+2] = 1
-                ## 89
+                    feats['雙牌組合'] += cardsUnSeen[card+2]
+                ## 邊張89
                 if  card % 10 == 9 and cardExist[-1] and not cardExist[-2]:
-                    #feats['邊張'] += cardsUnSeen[card-2]
-                    cardsNeeds[card-2] = 1
+                    feats['雙牌組合'] += cardsUnSeen[card-2]
                 ## 兩面
                 if  card % 10 > 1 and card % 10 < 8 and cardExist[1]:
-                    if not cardExist[-1] and not cardExist[2]:
-                        #feats['兩面'] += cardsUnSeen[card-1]+cardsUnSeen[card+2]
-                        cardsNeeds[card-1] = 1
-                        cardsNeeds[card+2] = 1
+                    if not cardExist[-1] :
+                        feats['雙牌組合'] += cardsUnSeen[card-1]
+                    if not cardExist[2] :
+                        feats['雙牌組合'] += cardsUnSeen[card+2]
                 ## 坎張
                 if  card%10 < 8 and not cardExist[1] and cardExist[2]:
-                    #feats['坎張'] += cardsUnSeen[card+1]
-                    cardsNeeds[card+1] = 1
-            
+                    feats['雙牌組合'] += cardsUnSeen[card+1]
+
+                        
         #feats['有效牌'] = sum(i*j for i,j in zip(cardsUnSeen, cardsNeeds))
         
         return feats
