@@ -340,8 +340,8 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
     elif len(pTcards+pFcards)==3:
         pcardsnum = [cards[0]%10 for cards in (pTcards+pFcards)]
         pcardsnum.sort()
-        assert len(lcardsnum)==3
-        if getKinds(lcardsnum)=='吃': # [3,4,5]
+        assert len(pcardsnum)==3
+        if getKinds(pcardsnum)=='吃': # [3,4,5]
             output_Hanname.append("三連刻\t|\t(10番/100分)")
             score[6]= score[6]+100
 
