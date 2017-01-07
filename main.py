@@ -4,7 +4,7 @@ from getScore import getScore
 import sys
 import operator
 Verbose = False
-UI = False
+UI = True
 
 
 table = Table(True)
@@ -21,7 +21,7 @@ try :
         table.newGame()
         for i in range(3):
             table.addAgent(OneStepAgent(i))
-        table.addAgent(OneStepAgent(3))
+        table.addAgent(ValueAgent(3))
         table.deal()
         winner,loser,scoreBoard= table.gameStart(verbose=Verbose,UI=UI)
         if scoreBoard != None :
