@@ -271,8 +271,8 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
                 for pair in paircards:
                     if not getColor(pair)=='字':
                         paircardsNum = pair[0]%10
-                        threeNumber = [cards[0]%10 for cards in threeOfAKind]
-                        fourNumber = [cards[0]%10 for cards in fourOfAKind]
+                        threeNumber = [cards[0]%10 for cards in threeOfAKind if not getColor(cards)=='字' ]
+                        fourNumber = [cards[0]%10 for cards in fourOfAKind if not getColor(cards)=='字']
                         samecount = 0
                         sameindexT = []
                         sameindexF = []
