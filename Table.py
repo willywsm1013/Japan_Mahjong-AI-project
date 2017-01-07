@@ -197,7 +197,7 @@ class Table:
             if verbose:
                 print ('贏家 : ',winAgent)
                 print ('放槍 : ',loseAgent)
-            score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind)
+            score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind,verbose =True)
             self.scoreBoard[winAgent] += score * 3
             if score <= 25:
                 for i in range(4):
@@ -215,7 +215,7 @@ class Table:
         elif state == '自摸':
             if verbose:
                 print (winAgent,'自摸')
-            score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind)
+            score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind,verbose=True)
             self.scoreBoard[winAgent] += score * 3
             for i in range(4):
                 if i != winAgent :

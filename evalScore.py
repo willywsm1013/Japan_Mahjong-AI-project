@@ -391,11 +391,11 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
 
     #8.1.4 清么九： 手牌全由么九數牌組成。別稱「清老頭」。     
     elif not z and len(threeOfAKind)==4 and len(tmpcards)==len(winCards):
-        output_Hanname.append("清么九\t|\t(？番/400分)("+listDict(tmpcards,2)+")")
+        output_Hanname.append("清么九\t|\t(？番/400分)","(",listDict(tmpcards,2),")")
         score[7] = score[7]+400
     #8.1.2 純全帶邀： 每一個牌組皆帶有1或9數牌。
     elif not z and len(tmpcards)==len(winCards):
-        output_Hanname.append("純全么\t|\t(？番/50分)(" + listDict(tmpcards,2) +")")
+        output_Hanname.append("純全么\t|\t(？番/50分)","(" , listDict(tmpcards,2) ,")")
         score[7] = score[7]+50
 
     ###  9 偶然類  ###

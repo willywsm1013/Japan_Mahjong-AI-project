@@ -1,6 +1,5 @@
 from Table import Table
 from SimpleAgent import *
-from getScore import getScore
 from learningAgent import *
 import sys,threading
 import operator

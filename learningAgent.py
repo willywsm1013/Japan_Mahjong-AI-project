@@ -14,7 +14,6 @@ class QLearningAgent(Agent):
         self.alpha = alpha
         self.setLearningTarget()
         self.lr_decay = lr_decay_fn
-        print (lr_decay_fn)
         if mode == 'train':
             self.train = True
         elif mode == 'test':
@@ -26,7 +25,9 @@ class QLearningAgent(Agent):
         self.reset()
         if pickle_name != None:
             self.load(pickle_name)
-    
+        print ('epsilon :',self.epsilon)   
+        print ('learning :',self.alpha)
+        print ('discount :',self.discount)
     def reset(self):
         Agent.reset(self)
         self.lastState = None
