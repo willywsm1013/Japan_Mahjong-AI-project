@@ -6,7 +6,7 @@ from Agent import Agent
 from BasicDefinition import CardIndex,WindIndex
 import random
 from SimpleAgent import RandomAgent,OneStepAgent
-from getScore import getScore
+from evalScore import evalCsore 
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -190,7 +190,7 @@ class Table:
         if state == '胡' :
             print ('贏家 : ',winAgent)
             print ('放槍 : ',loseAgent)
-            score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
+            score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind)
             self.scoreBoard[winAgent] += score * 3
             if score <= 25:
                 for i in range(4):
@@ -205,7 +205,7 @@ class Table:
             return winAgent,loseAgent,self.scoreBoard
         elif state == '自摸':
             print (winAgent,'自摸')
-            score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
+            score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind)
             self.scoreBoard[winAgent] += score * 3
             for i in range(4):
                 if i != winAgent :
