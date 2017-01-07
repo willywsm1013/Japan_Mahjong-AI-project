@@ -6,7 +6,7 @@ from Agent import Agent
 from BasicDefinition import CardIndex,WindIndex
 import random
 from SimpleAgent import RandomAgent,OneStepAgent
-from evalScore import evalCsore 
+from evalScore import evalScore 
 class Table:
     MAX_Agent = 4
     currentAgent = 0

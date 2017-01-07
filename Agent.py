@@ -287,5 +287,5 @@ class Agent :
             case.append(youxiaopaiNum)
             if valuelist:
                 case.append(valuelist[i])
-        print ('xiangtingshuInfo',xiangtingshuInfo)
+        #print ('xiangtingshuInfo',xiangtingshuInfo)
         return xiangtingshuInfo

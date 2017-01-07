@@ -809,7 +809,8 @@ def cal_xiangtingshu(hand, cardsOnboard,raw_hand=True, output_notes=False):
                 b=False
                 for group in boardgroups:
                     if not unique_hand.ingroups(group):
-                        print (str(group),"not in ",str(unique_hand))
+                        if verbose:
+                            print (str(group),"not in ",str(unique_hand))
                         b = True
 
                 if b:
@@ -905,10 +906,10 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
         elif xiangtingshu == xiangtingshu_lowest:
             best_cards.append((card, xiangtingshu, num_youxiaopai, list_youxiaopai , hands_in_group))
     # 输出
-    print('手牌: ', end = '')
-    print_hand(hand) # 输出手牌内容
-    #print(best_cards)
     if verbose:
+        print('手牌: ', end = '')
+        print_hand(hand) # 输出手牌内容
+        #print(best_cards)
         print("---------得到丟所有牌之後，最小的向聽數時的有效牌，及這些牌組的手牌牌型----------") 
     value_list=[]
     for card, xiangtingshu, num_youxiaopai, list_youxiaopai ,hands_in_group in best_cards:
@@ -939,9 +940,11 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
             totalvalue = sum(value) #sumation of all 這些牌組的手牌牌型's value 
             #EVALUATION END
             value_list.append(totalvalue)# USE FOR RETURN, ONE THROW CARD ONE VALUE
-            print('打{}, 向听数{}, 有效牌{}, {}种{}张, eval ={}'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai,totalvalue))
+            if verbose:
+                print('打{}, 向听数{}, 有效牌{}, {}种{}张, eval ={}'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai,totalvalue))
         else:
-            print('打{}, 向听数{}, 有效牌{}, {}种{}张'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai))
+            if verbose:
+                print('打{}, 向听数{}, 有效牌{}, {}种{}张'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai))
 
         
     #my code
