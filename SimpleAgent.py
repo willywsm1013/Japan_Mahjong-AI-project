@@ -259,7 +259,7 @@ class MCTSAgent(Agent):
             for i in range(4):
                 agents.append(RandomAgent(i))
                 if i == self.playerNumber:
-                    agents[i].handcard = self.handcard    #chosedCard還沒丟出去
+                    agents[i].handcard = self.handcard[:]    #chosedCard還沒丟出去
                 else:
                     cardNum = 13 - len(self.cardsOnBoard[i])*3
                     agents[i].handcard = remainCard[0:cardNum]
@@ -272,19 +272,19 @@ class MCTSAgent(Agent):
                 wind = WindIndex[i]
                 agent = agents[(i+currentAgent)%4]
                 agent.setWind(wind)
-            firstRound = True
+            firstRound = 0
             newCard = None
             while True:
                 agent  = agents[currentAgent]
                 state = None
                 throwCard = None
-                if firstRound:    #第一輪是該玩家丟出選擇的牌
+                if firstRound == 0:    #第一輪是該玩家丟出選擇的牌
                     state = 'Throw'
                     throwCard = chosedCard
                     agent.handcard.remove(throwCard)
-                    firstRound = False
+                    firstRound += 1 
                 else:
-                    state ,throwCard = agent.takeAction(newCard,verbose)               
+                    state ,throwCard = agent.takeAction(newCard,None)               
                             
                 if state == '自摸' : 
                     cards = throwCard
@@ -360,13 +360,13 @@ class MCTSAgent(Agent):
 
                 ## broadcast information
                 for i in range(4):
-                    agents[i].update(currentAgent,takeAgent,takeCards,throwCard,verbose)
+                    agents[i].update(currentAgent,takeAgent,takeCards,throwCard)
                 currentAgent = nextAgent
 
             if state == '胡' :
                 #print ('贏家 : ',winAgent)
                 #print ('放槍 : ',loseAgent)
-                score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],self.agents[winAgent].wind)
+                score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],agents[winAgent].wind)
                 scoreBoard[winAgent] += score * 3
                 if score <= 25:
                     for i in range(4):
@@ -400,10 +400,11 @@ class MCTSAgent(Agent):
             for i in range(cardTypeNum):
                 ucb[i] = scoreSum[i]/selectedTime[i] + math.sqrt(2*math.log(totalTime)/selectedTime[i])
 
-        avgScore = []
+        avgScore = [0.0]*cardTypeNum
         for i in range(cardTypeNum):
             avgScore[i] = scoreSum[i]/selectedTime[i]
         throwCard = cardType[avgScore.index(max(avgScore))]
+        self.handcard.remove(throwCard)
         return throwCard
         
     def findRemainCard(self):
