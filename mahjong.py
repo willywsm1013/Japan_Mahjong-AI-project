@@ -631,7 +631,7 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in
         #print ('value= ' ,value )
         #print ()
     #print ("valueList",valueList)
-    finalvalue = sum(valueList)
+    finalvalue = sum(valueList)/len(valueList)
     return finalvalue
 
 
@@ -855,10 +855,11 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
     p: 调用 cal_xiangtingshu(), 输出所有的可能最小向听数组合, 暂只支持标准型
     o: 输出何切信息
     """
+    verbose = False
     hand = hand_processer(hand, raw_hand)#將input的凌亂的手牌排序並整理成他定義的class
     # todo: 只判断 unique card, 在重复型将可明显减少判断时间.
     cardsOnboardList = []
-    if cardsOnboard:#([[1m,2m,3m],[5m,6m,7m]]
+    if cardsOnboard:#([['1m','2m','3m'],['5m','6m','7m']]
         #將明牌整理成他們的group的型態
         
         boardCards_in_group = Hand_in_group()
@@ -937,12 +938,14 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
                 else:
                     #value.append( simpleEval(totalcards_in_group,hand) )
                     value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand))
-            totalvalue = sum(value) #sumation of all 這些牌組的手牌牌型's value 
+            totalvalue = sum(value)/len(value) #sumation of all 這些牌組的手牌牌型's value 
             #EVALUATION END
             value_list.append(totalvalue)# USE FOR RETURN, ONE THROW CARD ONE VALUE
+            verbose = True
             if verbose:
                 print('打{}, 向听数{}, 有效牌{}, {}种{}张, eval ={}'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai,totalvalue))
         else:
+            verbose = True
             if verbose:
                 print('打{}, 向听数{}, 有效牌{}, {}种{}张'.format(card, xiangtingshu, youxiaopai, len(list_youxiaopai), num_youxiaopai))
 
@@ -974,7 +977,7 @@ def main():
     except ValueError:
         input_hand = input('input hand: ')
 
-    xiangtingshu_output(input_hand,[])
+    xiangtingshu_output( input_hand, [ ['3m','4m','5m'] , ['1p','2p','3p'] ] )
 
 if __name__ == '__main__':
     main()

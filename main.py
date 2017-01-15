@@ -1,16 +1,16 @@
 from Table import Table
 from SimpleAgent import *
-from getScore import getScore
+from evalScore import evalScore
 import sys
 import operator
 Verbose = False
-UI = True
+UI = False  
 
 
 table = Table(True)
 winRecord = [0]*4
 loseRecord = [0]*4
-repeat = 2000.0
+repeat = 10000.0
 data = []
 scores = [0]*4
 Round = 0
