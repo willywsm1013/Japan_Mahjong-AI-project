@@ -631,7 +631,7 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in
         #print ('value= ' ,value )
         #print ()
     #print ("valueList",valueList)
-    finalvalue = sum(valueList)
+    finalvalue = sum(valueList)/len(valueList)
     return finalvalue
 
 
@@ -937,7 +937,7 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
                 else:
                     #value.append( simpleEval(totalcards_in_group,hand) )
                     value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand))
-            totalvalue = sum(value) #sumation of all 這些牌組的手牌牌型's value 
+            totalvalue = sum(value)/len(value) #sumation of all 這些牌組的手牌牌型's value 
             #EVALUATION END
             value_list.append(totalvalue)# USE FOR RETURN, ONE THROW CARD ONE VALUE
             if verbose:

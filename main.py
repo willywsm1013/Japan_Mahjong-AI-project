@@ -1,13 +1,13 @@
 from Table import Table
 from SimpleAgent import *
-from getScore import getScore
+from evalScore import evalScore
 import sys
 import operator
 Verbose = False
-UI = True
+UI = False
 
 
-table = Table(True)
+table = Table(False)
 winRecord = [0]*4
 loseRecord = [0]*4
 repeat = 2000.0
