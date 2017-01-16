@@ -38,10 +38,13 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
         #print ( "Among them, hidden is ",hiddenCards , "; Opened is ,",openCards)
         print ("----------------------------------------")   
 
-    #verbose = False 
-    for cards in winCards:
-        for card in cards:
-            winCard.append(card)
+    #verbose = False
+    try:
+        for cards in winCards:
+            for card in cards:
+                winCard.append(card)
+    except:
+        print (winCards)
     #將牌的組合對類型做分類
 
     for comb in winCards:
@@ -452,17 +455,19 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
 
 def getKinds(pair): # 得到此list是'槓'、'碰'、還是'吃'、還是'雀'
     #print ("card : ",pair)
-    
-    if len(pair)==2 and len(set(pair))==1:
-        return '雀'
-    elif len(pair)==4 and len(set(pair))==1:
-        return '槓'
-    elif len(pair)==3 :
-        pair.sort()
-        if len(set(pair))==1:
-            return '碰'
-        elif len(set(pair))==3:
-            return '吃'
+    try: 
+        if len(pair)==2 and len(set(pair))==1:
+            return '雀'
+        elif len(pair)==4 and len(set(pair))==1:
+            return '槓'
+        elif len(pair)==3 :
+            pair.sort()
+            if len(set(pair))==1:
+                return '碰'
+            elif len(set(pair))==3:
+                return '吃'
+    except:
+        print (pair)
     #print (pair, ", it can't form any combination !")
     return None
     #########################################
