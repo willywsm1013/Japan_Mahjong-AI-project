@@ -3,6 +3,7 @@ from Agent import *
 import util 
 import random
 import os
+import math
 from six.moves import cPickle
 
 class QLearningAgent(Agent):
@@ -95,7 +96,7 @@ class QLearningAgent(Agent):
             throw = random.choice(self.handcard)
         else :
             legalActions = self.getLegalActions()
-            q = [self.getQValue(currentState,action) for action in legalActions]
+            q = [math.exp(self.getQValue(currentState,action)) for action in legalActions]
             maxQ = max(q)
             self.recordQ.append(maxQ)
             maxActions = [ legalActions[i] for i in range(len(legalActions)) if q[i] == maxQ]
@@ -107,7 +108,6 @@ class QLearningAgent(Agent):
         self.lastAction = throw
         
         return throw
-    
     def getLegalActions(self,terminate = False,mode = 'throw',card = None, agent=None):
         if terminate:
             return None
@@ -205,6 +205,17 @@ class QLearningAgent(Agent):
             f.close()
    
 class WeightLearningAgent(QLearningAgent):
+    def __str__(self):
+        information = """
+Agent : WeightLearningAgent
+Weight :
+"""
+        for key in self.weights:
+            seq = '    '+key+" : "+str(self.weights[key])+"\n"
+            information+=seq
+
+        return information
+
     def setLearningTarget(self): 
         self.weights = util.Counter()
     
@@ -243,7 +254,6 @@ class WeightLearningAgent(QLearningAgent):
             f = open(pickle_name, 'wb')
             cPickle.dump(self.weights, f, protocol=cPickle.HIGHEST_PROTOCOL)
             f.close()
-            self.printWeight()
 
     def load(self,pickle_name):
         print ('This is a weight learning agent')
@@ -252,11 +262,7 @@ class WeightLearningAgent(QLearningAgent):
             f = open(pickle_name, 'rb')
             self.weights = cPickle.load(f)
             f.close()
-            self.printWeight()
-    
-    def printWeight(self):
-        for key in self.weights:
-            print (key,':',self.weights[key])
+            print (self) 
     ###################################
     ###   Modified function below   ###
     ###################################
@@ -301,7 +307,6 @@ class SelfLearningAgent(WeightLearningAgent):
     
     def gameEnd(self,win,lose,score):
         Agent.gameEnd(self,win,lose,score)
-        
         if win == self.playerNumber :
             score = 500
         else :
@@ -318,7 +323,6 @@ class SelfLearningAgent(WeightLearningAgent):
         return state
     
     def getFeatures(self,state,action):   
-                
         feats = util.Counter()
         handcard = list(state[0])
         if type(action) == type(tuple()):
@@ -344,6 +348,8 @@ class SelfLearningAgent(WeightLearningAgent):
         ###############################
         ###   從下面開始找feature   ###
         ###############################
+        
+        ## 明牌
         for cards in cardsOnBoard :
             if len(cards) == 4:
                 feats['槓'] +=1
@@ -357,7 +363,52 @@ class SelfLearningAgent(WeightLearningAgent):
         
         cardsNeeds = [0]*34
         feats['明牌'] = len(cardsOnBoard)
-        
+        '''
+        ## 丟出牌（action）
+        if type(action) != type(tuple()) and action != None and type(action) != type(list()):
+            count = cardsUnSeen.count(action)
+            ## 依照同張牌（槓刻雀）
+            if count == 3:
+                feats['可湊組合']+=2
+            elif count == 2:
+                feats['可湊組合']+=1
+            elif count == 1:
+                feats['可湊組合']+=0.5
+                
+            ## 可組成的順
+            if action % 10!= 0 and int(action/10) < 3: 
+                ## 1
+                card = action
+                if card % 10 == 1 :
+                    feats['可湊組合']+=min(cardsUnSeen[card+1],cardsUnSeen[card+2])
+                ## 9
+                elif card % 10 == 9 :
+                    feats['可湊組合']+=min(cardsUnSeen[card-1],cardsUnSeen[card-2])
+                ## 2
+                elif card % 10 == 2:
+                    ## 1 2 3
+                    feats['可湊組合']+=min(cardsUnSeen[card-1],cardsUnSeen[card+1])
+                    ## 2 3 4 
+                    feats['可湊組合']+=min(cardsUnSeen[card+1],cardsUnSeen[card+2])
+                ## 8
+                elif card % 10 == 8:
+                    ## 7 8 9
+                    feats['可湊組合']+=min(cardsUnSeen[card-1],cardsUnSeen[card+1])
+                    ## 6 7 8
+                    feats['可湊組合']+=min(cardsUnSeen[card-1],cardsUnSeen[card-2])
+
+                ## 3 4 5 6 7
+                else:
+                    ## a-2 a-1 a
+                    feats['可湊組合']+=min(cardsUnSeen[card-1],cardsUnSeen[card-2])
+                    ## a-1 a a+1
+                    feats['可湊組合']+=min(cardsUnSeen[card-1],cardsUnSeen[card+1])
+                    ## a a+1 a+2
+                    feats['可湊組合']+=min(cardsUnSeen[card+1],cardsUnSeen[card+2])                    
+        else:
+            feats['可湊組合'] = 0
+        '''
+        ## 手牌
         for card in handSet :
             ##############################################################
             ### cardExist :
@@ -368,6 +419,7 @@ class SelfLearningAgent(WeightLearningAgent):
             
             ## 廣義孤張判定
             if cardExist[0] == 1 :
+                feats['孤張剩牌'] += cardsUnSeen[card]                    
                 if int(card/10) == 3 or card%10 ==0 :
                     feats['孤張'] += 1
                 elif card % 10 == 1 :
@@ -377,7 +429,6 @@ class SelfLearningAgent(WeightLearningAgent):
                     ## 手牌 有2但3以被拿完 或 有3但2以被拿完
                     elif (not cardExist[1] and not cardsUnSeen[card+1]) or (not cardExist[2] and not cardsUnSeen[card+2]):
                         feats['孤張'] += 1
-                        
                 elif card%10 == 9 :
                     ## 手牌沒有7 8
                     if not cardExist[-1] and not cardExist[-2]:
@@ -385,7 +436,6 @@ class SelfLearningAgent(WeightLearningAgent):
                     ## 手牌 有7但8以被拿完 或 有8但7以被拿完
                     elif (not cardExist[-1] and not cardsUnSeen[card-1]) or (not cardExist[-2] and not cardsUnSeen[card-2]):
                         feats['孤張'] += 1
-                
                 elif card%10 == 2:
                     ## 手牌沒有1 4
                     if not cardExist[-1] and not cardExist[2] : 
@@ -395,7 +445,6 @@ class SelfLearningAgent(WeightLearningAgent):
                         ## 1 4 已被拿完
                         elif not cardsUnSeen[card-1] and not cardsUnSeen[card+2]:
                             feats['孤張'] += 1
-                            
                     ## 有1或4沒3,但3已被拿完
                     elif (cardExist[-1] or cardExist[2]) and not cardExist[1] and not cardsUnSeen[card+1]: 
                          feats['孤張'] += 1
@@ -426,7 +475,6 @@ class SelfLearningAgent(WeightLearningAgent):
                                 found = True
                             if not found :
                                 feats['孤張'] += 1
-            #feats['複製'] += cardsUnSeen[card]                    
             if cardExist[0] == 2:     
                 if cardsUnSeen[card]:
                     feats['成刻對'] += cardsUnSeen[card]
@@ -457,9 +505,109 @@ class SelfLearningAgent(WeightLearningAgent):
                 ## 坎張
                 if  card%10 < 8 and not cardExist[1] and cardExist[2]:
                     feats['雙牌組合'] += cardsUnSeen[card+1]
-
                         
         #feats['有效牌'] = sum(i*j for i,j in zip(cardsUnSeen, cardsNeeds))
         
         return feats
 
+class ScoreLearningAgent(SelfLearningAgent):
+    def gameEnd(self,win,lose,score):
+        Agent.gameEnd(self,win,lose,score)
+        
+        if score != None:
+            if score < 0 :
+                score = 0
+        '''
+        if win == self.playerNumber :
+            score = 500
+        else :
+            score = 0
+        '''
+        
+        self.updateQ(terminate = True, reward = score)
+
+    def getReward(self,terminate):
+        return 0
+     
+    def getState(self):
+        cardsUnSeen = [ 4 - self.cardOpened.count(i) - self.handcard.count(i) for i in range(34)]
+        state = [self.handcard[:],self.cardsOnBoard[self.playerNumber][:],cardsUnSeen,self.cardOpened[:]]
+        return state
+    
+    def getFeatures(self,state,action):
+
+        selfState = state[:3]
+        feats = SelfLearningAgent.getFeatures(self,selfState,action)
+        handcard = list(state[0])
+        if type(action) == type(tuple()):
+            handcard.append(action[1])
+            for card in action[0] :
+                handcard.remove(card)
+            cardsOnBoard = list(state[1])
+            cardsOnBoard.append(list(action[0]))
+            cardsOnBoard = tuple(cardsOnBoard)
+
+        elif action != None and type(action) == type(int()):
+            handcard.remove(action)
+            cardsOnBoard = state[1]
+        elif action == None:
+            cardsOnBoard = state[1]
+        else :
+            print ('unlegal action in getFeature : ',action)
+            raise Exception
+        
+        handSet = set(handcard)
+        cardsUnSeen  = state [2]
+        enemyCardsOnBoard = (state[3][i] for i in range(4) if i != self.playerNumber )
+        ###############################
+        ###   從下面開始找feature   ###
+        ###############################
+         
+        '''
+        ### 檢查明牌
+        for cards in cardsOnBoard :
+            if len(cards) == 3 and len(set(cards)) == 1 :
+                card = cards[0]
+                if card == 0 or card == 10 or card == 20:
+                    feats['三元刻'] += 1
+                elif card >=30 and card <=33: 
+                    feats['風刻'] += 1
+            elif len(cards)==4 and len(set(cards)) == 1:
+                card = cards[0]
+                if card == 0 or card == 10 or card == 20:
+                    feats['三元槓'] += 1
+                elif card >=30 and card <= 33:
+                    feats['風槓'] += 1
+            elif len(cards)==3 and len(set(cards))==3:
+        '''     
+        ### 檢查手牌
+        for card in handSet :
+            count = handcard.count(card)
+            ''' 
+            if count == 2:
+                if card == 0 or card ==10 or card == 20:
+                    feats['三元對'] += 1
+                elif card >=30 and card <=33: 
+                    feats['風對'] += 1
+            '''
+            if count == 3 :
+                feats['暗刻'] +=1
+                '''
+                if card == 0 or card == 10 or card == 20:
+                    feats['三元刻'] += 1
+                elif card >=30 and card <=33: 
+                    feats['風刻'] += 1
+                '''
+            '''
+            elif count == 4 :
+                if card == 0 or card == 10 or card == 20:
+                    feats['三元槓'] += 1
+                elif card >=30 and card <= 33:
+                    feats['風槓'] += 1
+            '''
+        '''
+        feats['三元牌'] = feats['三元槓']+feats['三元刻']
+        feats['風牌'] = feats['風槓']+feats['風刻']
+        feats['字'] =feats['三元牌'] +feats['風牌']+feats['三元對'] +feats['風對']
+        '''
+        return feats

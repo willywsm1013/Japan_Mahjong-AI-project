@@ -14,17 +14,26 @@ import argparse
 ##########################
 ###   command Parser   ###
 ##########################
-parser = argparse.ArgumentParser(description='')
+parser = argparse.ArgumentParser()
 
-parser.add_argument('-train',"--train", action='store_true', help = "open training mode")
-parser.add_argument('-test',"--test", action='store_true', help = "open testing mode")
-parser.add_argument('-r',"--repeat", type=float,dest = "repeat", default = 1, help = "training or testing times[1]")
+#----------------------
+TrainOrTest = parser.add_mutually_exclusive_group(required = True)
+TrainOrTest.add_argument('-train', action='store_true', help = "open training mode")
+TrainOrTest.add_argument('-test', action='store_true', help = "open testing mode")
+TrainOrTest.add_argument('-pw','--print_weight', action='store_true', help = 'print weight of learningAgent')
+#----------------------
+
+parser.add_argument('-r',"--repeat", type=float, default = 1, help = "training or testing times[1]")
 parser.add_argument('-v','--verbose',action='store_true',help='print information')
 parser.add_argument('-ui','--UI',action='store_true',help='open user interface')
-parser.add_argument('-pw','--print_weight',action='store_true',help='print weight of learningAgent')
+parser.add_argument('-lr','--learning_rate',type=float,default=1e-5,help='setting learning rate[1e-5]')
 parser.add_argument('-dlr','--decrease_learning_rate',action='store_true',help='decrease learning rate')
+parser.add_argument('-ep','--epsilon',type=float,default=0.5,help='setting epsilon')
 parser.add_argument('-dep','--decrease_epsilon',action='store_true',help='decrease epsilon')
-
+parser.add_argument('-pq','--plot_q',action='store_true',help='plot Q value')
+parser.add_argument('-e','--enemy',default='random',choices=['random','onestep','selflearn'],help='enemy type[random]')
+parser.add_argument('-le','--load_enemy',default=None,help='enemy weights file')
+parser.add_argument('-t','--target',default='win_rate',choices=['win_rate','average_score','best_score'],help='learning target[win_rate]')
 
 args = parser.parse_args()
 
@@ -37,18 +46,23 @@ test = args.test
 repeat = args.repeat
 print_weight = args.print_weight
 
+learningRate=args.learning_rate
+epsilon=args.epsilon
 decreaseEpsilon = args.decrease_epsilon
 decreaseLearningRate = args.decrease_learning_rate
 
-plotQ = False
+enemyType = args.enemy
+plotQ = args.plot_q
+
+target = args.target
 rounds = 1000
 
-pickle = 'selfLearning（槓）（刻）（順）（明牌）（廣義孤張）（成刻對）（不成刻對）（雙牌）'
+pickle = './save/scorelearn/scoreLearning（暗刻）'
 
 #########################
 ###   program start   ###
 #########################
-if print_weight:
+if not train and not test and print_weight:
     agent = SelfLearningAgent(0,pickle_name=pickle)
     sys.exit()
 
@@ -78,21 +92,32 @@ def exponentialDecay(value = None):
     minimum = 1e-20
     v = value * decayRate
     return max(v,minimum)
+def getEnemy(number,enemy_type):
+    if enemy_type == 'random':
+        return RandomAgent(number)
+    elif enemy_type == 'onestep':
+        return OneStepAgent(number)
+    elif enemy_type == 'selflearn':
+        return SelfLearningAgent(number,mode = 'test',pickle_name=pickle)
+    else:
+        print ('no ',enemy_type,' agent')
+        raise Exception
 
 def testing(table,playerNumber,rounds):
+    
     print ('testing...')
     testTable = Table(False)
-    testTable.addAgent(RandomAgent(0))
-    testTable.addAgent(RandomAgent(1))
-    testTable.addAgent(RandomAgent(2))
+    for i in range(3):
+        testTable.addAgent(getEnemy(i,'random'))
     
-    agent = SelfLearningAgent(3,mode = 'test')
+    agent = ScoreLearningAgent(3,mode = 'test')
     agent.weights = table.agents[playerNumber].weights.copy() 
     testTable.addAgent(agent)
-    
     win = [0]*4
     lose = [0]*4
+    scores = [0]*4
     for time in range(rounds):
+        print ('testing...',time,end='\r')
         testTable.newGame()
         testTable.deal()
         
@@ -101,37 +126,41 @@ def testing(table,playerNumber,rounds):
             win[winner]+=1
         if loser != None:
             lose[loser]+=1
-        
-    return win[playerNumber]
+        if scoreBoard != None :
+            for i in range(4): scores[i]+=scoreBoard[i]
+    print ('testing win games : ',win[playerNumber])
+    print ('testing lose games : ',lose[playerNumber])
+    print ('testing scores : ',scores)
 
-winRate = []
+    return win[playerNumber],lose[playerNumber],scores
+
+keeps = []
 winCounts = []
 train_Q = []
 try :
-    table.addAgent(RandomAgent(0))
-    table.addAgent(RandomAgent(1))
-    table.addAgent(RandomAgent(2))
+    for i in range(3):
+        table.addAgent(getEnemy(i,enemyType))
+    
     if train :
-        epsilon = 0.5
-        if decreaseEpsilon :
-            epsilon = 1
-        table.addAgent(SelfLearningAgent(player_number = 3,
+        table.addAgent(ScoreLearningAgent(player_number = 3,
                                          discount = 0.8,
                                          epsilon = epsilon,
-                                         alpha = 0.0001,
+                                         alpha = learningRate,
                                          mode = 'train',
                                          pickle_name=pickle,
                                          lr_decay_fn = exponentialDecay
                                         ))
-        maxWin = testing(table,3,rounds)
-        winRate.append(maxWin)
+        testWin,testLose,testScores = testing(table,3,rounds)
+        if target == 'win_rate':
+            keep = testWin
+        elif target == 'average_score':
+            keep = testScores[3]
+        keeps.append(keep)
     elif test:
-        table.addAgent(SelfLearningAgent(3,mode = 'test',pickle_name=pickle))
+        table.addAgent(ScoreLearningAgent(3,mode = 'test',pickle_name=pickle))
     else :
         print ('please use -train or -test flags')
         sys.exit()
-    
-    maxWin = 0
     for time in range(int(repeat)):
         Round += 1.0
         if Verbose:
@@ -161,26 +190,28 @@ try :
             loseRecord[loser]+=1
         if Verbose:
             print ('**************************')
-        if train :
-            '''
-            qValue=table.agents[3].recordQ
-            train_Q.append(sum(qValue)/len(qValue)+1)
-            if plotQ and (time+1) % 1000 == 0:
-                plt.plot(train_Q)
-                plt.ylabel('Q value')
-                plt.show()
-            '''
+        if train :            
+                        
             if (time+1) % 10000 == 0:
                 table.gameEnd()
-                testWin = testing(table,3,rounds)
-                winRate.append(testWin)
-                print ('testing win games : ',testWin)
-                #input()
-                if testWin > maxWin :
+                
+                print ('====================')
+                print (table.agents[3])
+                print ('====================')
+
+                testWin,testLose,testScores = testing(table,3,rounds)
+                if target == 'win_rate' and testWin > keep:
+                    keeps.append(testWin)
                     print ('Saving...')
                     table.gameEnd(save = True, player = 3,pickle_name = pickle)
-                    maxWin = testWin
-                    #input()
+                    keep = testWin
+
+                elif target == 'average_score' and testScores[3] > keep:
+                    keeps.append(testScores[3])
+                    print ('Saving...')
+                    table.gameEnd(save = True, player = 3,pickle_name = pickle)
+                    keep = testScores[3]
+
                 if decreaseEpsilon:
                     table.agents[3].setEpsilon(1-(time+1)/100000)
                
@@ -189,11 +220,21 @@ try :
 
             if (time+1) % 1000 ==0 and decreaseLearningRate:
                 table.agents[3].lrDecay()
+        if plotQ :
+            qValue=table.agents[3].recordQ
+            plt.plot(qValue)
+            plt.ylabel('Q value')
+            plt.show()
+
     print ('胡:', [winRecord[i]/Round for i in range(4)])
     print ('放槍:',[loseRecord[i]/Round for i in range(4)])
     print ('分數:',scores)
     print ('平均分數:',[scores[i]/Round for i in range(4)])
-    print ('勝率紀錄:',winRate)
+    if target == 'win_rate':
+        print ('勝率紀錄:',keeps)
+    elif target == 'average_score':
+        print ('平均得分:',[i/rounds for i in keeps])
+        
     for data in Table.loseReason[3]:
         print (data)
     if plotQ :
