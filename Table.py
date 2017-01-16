@@ -361,19 +361,36 @@ class Table:
         visibleTable.append(r1)
         visibleTable.append(r2)
         visibleTable.append(['      ','-'*55,'      '])
+        ## get agent 3's hand cards
+        handcard = sorted(self.agents[3].handcard[:])
+        r1 = ['      ']
+        r2 = ['      ']
+        for card in handcard:
+            chinese = CardIndex[card]
+            if len(chinese) == 2:
+                r1.append(chinese[0])
+                r2.append(chinese[1])
+            else :
+                r1.append('  ')
+                r2.append(chinese[0])
+
+        visibleTable.append(r1)
+        visibleTable.append(r2)
+        visibleTable.append(['      ','-'*55,'      '])
         visibleTable.append([' '*69])
-        
+
+
         return visibleTable
 
     def __addToken(self,table,token):
         length = len(table)
         if token == 0:
-            table[length-13][-1]='o'
+            table[length-15][-1]='o'
         elif token == 1:
             space = int(len(table[0][0])/2)
-            table[length-25][0]=' '*space+'o'+' '*space
+            table[length-28][0]=' '*space+'o'+' '*space
         elif token == 2:
-            table[length-13][0]='o'
+            table[length-15][0]='o'
         elif token == 3:
             space = int(len(table[0][0])/2)
             table[-1][0]=' '*space+'o'+' '*space
