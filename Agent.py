@@ -5,16 +5,17 @@ class Agent :
    
 	
     def __init__(self,player_number):
-        #playerNumber = None
-        #action = None
+        self.playerNumber = player_number
+        self.reset()
+
+    def reset(self):    
         self.handcard = None
         self.cardsOnBoard = [[],[],[],[]]
         self.cardsThrowed = [[],[],[],[]]
         self.cardsThrowedNoTaken = []
         self.cardOpened = []
-        self.playerNumber = player_number
         self.wind =None
-    
+
     def setAction(self,action):
         self.action = action
     
@@ -289,3 +290,11 @@ class Agent :
                 case.append(valuelist[i])
         #print ('xiangtingshuInfo',xiangtingshuInfo)
         return xiangtingshuInfo
+    ######################################
+    ###   一局遊戲結束呼叫的function   ###
+    ###   給learning Agent用的         ###
+    ######################################
+    def gameEnd(self,win,lose,score):
+        pass
+    
+    

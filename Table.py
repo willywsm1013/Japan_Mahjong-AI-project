@@ -11,19 +11,25 @@ import time
 class Table:
     MAX_Agent = 4
     currentAgent = 0
-    deck = []
     throwsAndCombination = [] ## 紀錄[已經丟的牌,已翻開的組合,當局產生的組合]
     loseReason = [[],[],[],[]]
     def __init__(self,saved=False):
-        self.autoSaved = False
-        if saved :
-            self.autoSaved = True
+        self.autoSaved = saved
+        self.agents = []
+        self.deck = []
 
     def newGame(self) :
-        self.agents = []
         self.deckInitial()
         self.throwedCards=[[],[],[],[]]
         self.scoreBoard = [0]*4
+        for agent in self.agents:
+            agent.reset()
+    
+    def gameEnd(self,save = False, player = None,pickle_name = None): 
+        for i in range(4):
+            self.agents[i].gameEnd(self.win,self.lose,self.scoreBoard[i])
+        if save:
+            self.agents[player].save(pickle_name)
     
     def addAgent(self,newAgent):
         if len(self.agents) < self.MAX_Agent :
@@ -189,8 +195,9 @@ class Table:
             if verbose :
                 print ('-------------------------------------')
         if state == '胡' :
-            print ('贏家 : ',winAgent)
-            print ('放槍 : ',loseAgent)
+            if verbose:
+                print ('贏家 : ',winAgent)
+                print ('放槍 : ',loseAgent)
             score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind)
             self.scoreBoard[winAgent] += score * 3
             if score <= 25:
@@ -202,19 +209,31 @@ class Table:
                 for i in range(4):
                     if i != winAgent and i != loseAgent:
                         self.scoreBoard[i] -= 25
-
+            self.win = winAgent
+            self.lose = loseAgent
+            
             return winAgent,loseAgent,self.scoreBoard
         elif state == '自摸':
-            print (winAgent,'自摸')
+            if verbose:
+                print (winAgent,'自摸')
             score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,self.agents[winAgent].wind)
             self.scoreBoard[winAgent] += score * 3
             for i in range(4):
                 if i != winAgent :
                     self.scoreBoard[i] -=score
+            
+            self.win = winAgent
+            self.lose = None
 
             return winAgent,None,self.scoreBoard
         elif state == '流局' :
-            print (state)
+            if verbose:
+                print (state)
+            
+            self.win = None
+            self.lose= None
+            self.scoreBoard = [None]*4
+            
             return None,None,None
         else:
             assert 0==1
