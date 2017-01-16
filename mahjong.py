@@ -645,7 +645,7 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,cardsOnboard_original = Han
     if valueList:
         finalvalue = sum(valueList)/len(valueList)
         return finalvalue
-    else
+    else:
         return 0
     
 def groupsTransform(ListOf_Groups):
