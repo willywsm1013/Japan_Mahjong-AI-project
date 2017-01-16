@@ -177,7 +177,7 @@ class ValueAgent(Agent):
 
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             infos = self.xiangtingshu(self.handcard)
             xiangtingNum = infos[0][1]
@@ -222,7 +222,7 @@ class MCTSAgent(Agent):
 
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             infos = self.xiangtingshu(self.handcard)
             
@@ -289,9 +289,9 @@ class MCTSAgent(Agent):
             #####################################################
             currentAgent = self.playerNumber
             for i in range(4):
-                wind = WindIndex[i]
+                #wind = WindIndex[i]
                 agent = agents[(i+currentAgent)%4]
-                agent.setWind(wind)
+                #agent.setWind(wind)
             firstRound = 0
             newCard = None
             while True:
