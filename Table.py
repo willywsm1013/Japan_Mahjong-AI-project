@@ -7,6 +7,7 @@ from BasicDefinition import CardIndex,WindIndex
 import random
 from SimpleAgent import RandomAgent,OneStepAgent
 from evalScore import evalScore 
+import time
 class Table:
     MAX_Agent = 4
     currentAgent = 0
@@ -73,7 +74,7 @@ class Table:
                 self.__addToken(table,self.currentAgent)
                 for row in table:
                     print ('|'.join(map(str,row)))
-                input()
+                time.sleep(0.1)
             ###
 
             agent  = self.agents[self.currentAgent]
@@ -93,7 +94,7 @@ class Table:
             if verbose or UI: 
                 print ('Throw ',CardIndex[throwCard])
             if UI:
-                input()
+                time.sleep(0.1)
             ###
 
             assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
@@ -153,7 +154,7 @@ class Table:
                 if verbose or UI:
                     print ('Agent ',nextAgent,' get ',CardIndex[throwCard])
                 if UI:
-                   input()
+                    time.sleep(0.1)
                 takeAgent = nextAgent            
                 takeCards = cards                
 
@@ -172,7 +173,7 @@ class Table:
                 if verbose or UI:
                     print ('No agnet get ',CardIndex[throwCard])
                 if UI: 
-                    input()
+                    time.sleep(0.1)
                 takeAgent = None
                 takeCards = None
                 newCard = self.pickCard()
