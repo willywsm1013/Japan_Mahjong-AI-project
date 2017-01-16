@@ -427,7 +427,7 @@ def sort_Group(group):
     cards.sort(key=sort_hand)
     return Group(cards)
 
-def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in_group()):
+def Eval_WinPattern(xiangtingshu,totalcards_in_group,cardsOnboard_original = Hand_in_group(),cardsOnboard = Hand_in_group()):
     OPEN_CARDs = []
     # hand cards classification (after take card)
     TakeZero_CARDs = [] #original is MIANZI
@@ -446,19 +446,29 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in
         print ("--------Eval WinPattern-----------")
         print("total cards:")
     num_quetou = 0
-   
+    #print ('group in total')
     for group in totalcards_in_group.get_groups():
+        #print (str(group))
         if group.get_type()=='duizi':
             num_quetou+=1
         if debug:
             print (str(group),end=',')
+    hand = totalcards_in_group
+    #print ('group in hand')
+    for group in hand.get_groups():
+        if cardsOnboard.ingroups(group):
+            hand.remove(group)
+    
     #print ()
     # put opencards into OPEN_CARDs
-    for group in cardsOnboard.get_groups():
+    #print ('group on board(original)')
+    for group in cardsOnboard_original.get_groups():
+        #print (str(group))
         OPEN_CARDs.append(group)
     # add handcards youxiaopai, calculate their combinations
     # add these combinations into list for winpatterns calculation
     for group in hand.get_groups():
+
         type_of_group = group.get_type()
         if type_of_group in MIANZI:
 
@@ -551,6 +561,7 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in
     #    value = simpleEval(totalcards_in_group,hand,cardsOnboard)
 
     # now we have the combinations
+    #debug=True
     if debug:
         print ("comb in Three")
         for comb in Three:
@@ -631,7 +642,11 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in
         #print ('value= ' ,value )
         #print ()
     #print ("valueList",valueList)
-    finalvalue = sum(valueList)/len(valueList)
+    #print (valueList)
+    if not valueList:
+        return 0
+    else:
+        finalvalue = sum(valueList)/len(valueList)
     return finalvalue
 
 
@@ -855,25 +870,43 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
     p: 调用 cal_xiangtingshu(), 输出所有的可能最小向听数组合, 暂只支持标准型
     o: 输出何切信息
     """
+    
     hand = hand_processer(hand, raw_hand)#將input的凌亂的手牌排序並整理成他定義的class
     # todo: 只判断 unique card, 在重复型将可明显减少判断时间.
+    cardsOnboard_original = Hand_in_group()
     cardsOnboardList = []
     if cardsOnboard:#([[1m,2m,3m],[5m,6m,7m]]
         #將明牌整理成他們的group的型態
         
         boardCards_in_group = Hand_in_group()
         for group in cardsOnboard:
+            
             groupcards=[]
             for card in group:
-                
+                cardnow = Card(card)
+                groupcards.append(cardnow)#[Card(1m),Card(2m),Card(3m)]
+                used_card(cardnow)
+            groupT = Group(groupcards)#
+                    
+            boardCards_in_group.append(groupT)
+        cardsOnboard_original = boardCards_in_group#已經整理成Hand_in_group 的格式,with kang
+
+        boardCards_in_group = Hand_in_group()
+        for group in cardsOnboard:
+            if iskang(group):
+                group.remove(group[0])
+            groupcards=[]
+            for card in group:
                 cardnow = Card(card)
                 cardsOnboardList.append(cardnow)
-                used_card(cardnow)
+                
                 groupcards.append(cardnow)#[Card(1m),Card(2m),Card(3m)]
 
-            groupT = Group(groupcards)#        
+            groupT = Group(groupcards)#
+                    
             boardCards_in_group.append(groupT)
-        cardsOnboard = boardCards_in_group#已經整理成Hand_in_group 的格式
+        cardsOnboard = boardCards_in_group#已經整理成Hand_in_group 的格式,without kang
+
     xiangtingshu_lowest = 8 
     best_cards = []
     for card in hand: 
@@ -895,7 +928,7 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
             card0 = card#從手牌中選出來，要被丟掉的那張牌。
         hand_card = hand[:]# card list
         hand_card.remove(card)
-        total_card = hand_card + cardsOnboardList         
+        total_card = hand_card + cardsOnboardList #without kang        
         #將某張牌丟掉之後，去計算向聽數
         xiangtingshu, num_youxiaopai, list_youxiaopai, hands_in_group = cal_xiangtingshu(total_card, cardsOnboard,raw_hand=False) 
 
@@ -924,19 +957,21 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
                 
                 if verbose:
                     print('hand in group : ', str(hand))
-
+                # now hand is the totalgroup
+                '''
                 if cardsOnboard:#翻開的牌，已經整理成Hand_in_group，因eval要算分數應該要所有的一起
                     totalcards_in_group = Hand_in_group(cardsOnboard.get_groups()+hand.get_groups())
                 else:
                     totalcards_in_group = Hand_in_group(hand.get_groups())
+                '''
                 #print('evaluation winpattern....')
                 #print ('simple eval ( evaluate only cards now)...')
                 if cardsOnboard:
                     #value.append( simpleEval(totalcards_in_group,hand,cardsOnboard) )
-                    value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard))
+                    value.append(Eval_WinPattern(xiangtingshu,hand,cardsOnboard_original , cardsOnboard))
                 else:
                     #value.append( simpleEval(totalcards_in_group,hand) )
-                    value.append(Eval_WinPattern(xiangtingshu,totalcards_in_group,hand))
+                    value.append(Eval_WinPattern(xiangtingshu,hand))
             totalvalue = sum(value)/len(value) #sumation of all 這些牌組的手牌牌型's value 
             #EVALUATION END
             value_list.append(totalvalue)# USE FOR RETURN, ONE THROW CARD ONE VALUE
@@ -961,7 +996,12 @@ def xiangtingshu_output( hand , cardsOnboard,evaluate = False,raw_hand=True):
     else:
         return xiangtingshuInfo,[]
 
-    
+def iskang(group):
+    if len(group)==4:
+        if len(set(group))==1:
+            return True
+
+    return False    
 def main():
     """main func.
 
@@ -974,7 +1014,7 @@ def main():
     except ValueError:
         input_hand = input('input hand: ')
 
-    xiangtingshu_output(input_hand,[])
+    xiangtingshu_output(input_hand,[['7s','7s','7s','7s']])
 
 if __name__ == '__main__':
     main()

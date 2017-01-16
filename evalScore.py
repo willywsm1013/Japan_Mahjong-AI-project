@@ -28,7 +28,7 @@ def evalScore( totalCards, hiddenCards , openCards ,winagent = None, agentWind =
 
     winCard =[] #no combination , easy for calculation,means total card
     #print ("The cards ", listDict(winCards,2))
-    #verbose = True
+    verbose = False
 
     if verbose:
         if win:
@@ -499,7 +499,7 @@ openCards = [[26, 26, 26, 26], [14, 15, 16], [22, 23, 24]]
 '''
 
 if __name__ == '__main__':
-    winCards=[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5]]
+    winCards=[[6, 6], [9, 9], [13, 13], [4, 4, 4], [5, 5]]
     hiddenCards=[[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5]]
     openCards= []
     score = evalScore( winCards, hiddenCards , openCards )
