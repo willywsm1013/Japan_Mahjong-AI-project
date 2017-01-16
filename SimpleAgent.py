@@ -3,6 +3,8 @@ import random
 from BasicDefinition import *
 from Agent import Agent
 from util import *
+import math
+from evalScore import evalScore
 ########################
 ###   Random Agent   ###
 ########################
@@ -175,10 +177,9 @@ class ValueAgent(Agent):
 
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             return 'Throw' , self.OneStepwithScore() 
-
 
     def OneStepwithScore(self):
         evaluate = True
@@ -192,10 +193,262 @@ class ValueAgent(Agent):
             maxUtil = max([info[3] for info in infos]) #info[3]為有效牌總數，選擇最大的那個
             throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
         
+        self.handcard.remove(throwCard)
         return throwCard
         print (throwCards)
         
         print (len(infos))
         for info in infos :
             print (info)
+
+class MCTSAgent(Agent):
+    def takeAction(self,newCard,verbose):
+        if newCard!= None:
+            self.handcard.append(newCard)
+        result, cardCombination = self.goalTest()
+
+        assert result or cardCombination == None
+        if result:
+            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+        else:
+            infos = self.xiangtingshu(self.handcard)
+            
+            if infos[0][1]>3:
+                return 'Throw' ,self.OneStep()
+            else:
+                return 'Throw' , self.SearchScore() 
+
+    def SearchScore(self):
+        cardType = []
+
+        #從手牌選#######################################################
+        """
+        for card in self.handcard:
+            if card not in cardType:
+                cardType.append(card)
+        """
+        ####從向聽數最小的選
+        for case in self.xiangtingshu(self.handcard):
+            cardType.append(case[0])
+        ###############################################################
+
+        cardTypeNum = len(cardType)
+        if cardTypeNum == 1:
+            self.handcard.remove(cardType[0])
+            return cardType[0]
+        
+        ucb = [0.0]*cardTypeNum
+
+        selectedTime = [1.0]*cardTypeNum
+        totalTime = cardTypeNum
+        scoreSum = [0.0]*cardTypeNum
+        repeat = 1000
+        for time in range(repeat):
+            #print(ucb)
+            #挑ucb最大的###############################################################
+            
+            maxUcb = max(ucb)
+            cardIndex = random.choice([i for i in range(cardTypeNum) if ucb[i] == maxUcb])
+            
+            #隨機挑一張
+            #cardIndex = random.choice([i for i in range(cardTypeNum)])
+            ##########################################################################
+
+            selectedTime[cardIndex] += 1
+            totalTime += 1
+            chosedCard = cardType[cardIndex]
+
+            #模擬遊戲
+            remainCard = self.findRemainCard()
+            random.shuffle(remainCard)
+            agents = []
+            scoreBoard = [0]*4
+            for i in range(4):
+                agents.append(RandomAgent(i))
+                if i == self.playerNumber:
+                    agents[i].handcard = self.handcard[:]    #chosedCard還沒丟出去
+                else:
+                    cardNum = 13 - len(self.cardsOnBoard[i])*3
+                    agents[i].handcard = remainCard[0:cardNum]
+                    remainCard = remainCard[cardNum::]
+
+
+            #####################################################
+            currentAgent = self.playerNumber
+            for i in range(4):
+                wind = WindIndex[i]
+                agent = agents[(i+currentAgent)%4]
+                agent.setWind(wind)
+            firstRound = 0
+            newCard = None
+            while True:
+                agent  = agents[currentAgent]
+                state = None
+                throwCard = None
+                if firstRound == 0:    #第一輪是該玩家丟出選擇的牌
+                    state = 'Throw'
+                    throwCard = chosedCard
+                    agent.handcard.remove(throwCard)
+                    firstRound += 1 
+                else:
+                    state ,throwCard = agent.takeAction(newCard,None)               
+                            
+                if state == '自摸' : 
+                    cards = throwCard
+                    winAgent = currentAgent
+                    break
+
+                assert throwCard < 34 and throwCard >= 0,('the card you throw is ',throwCard)
+                ## find who is the next
+                nextAgent = (currentAgent+1) % 4
+                for i in range(4):
+                    if i != currentAgent:
+                        agent = agents[i]
+                        info = agent.check(currentAgent,throwCard)
+                        tmpCards = info[0]#[1 1 1]
+                        tmpState = info[1]#'吃'、'碰'、'槓'
+                        assert throwCard == info[2]#丟出來的那張
+                    
+                        if tmpState == '過':
+                            continue
+                    
+                        ## 胡 > 碰槓 > 吃
+                        if tmpState == '胡' :
+                            nextAgent = i
+                            cards = tmpCards
+                            state = tmpState
+                            break
+                        if tmpState == '碰':
+                            assert state != '槓' and state != '碰'
+                            state = tmpState
+                            cards = tmpCards
+                            nextAgent = i
+                        elif tmpState == '槓':
+                            assert state != '碰' and state != '槓'
+                            state = tmpState
+                            cards = tmpCards
+                            nextAgent = i
+                        elif tmpState == '吃' and (state != '碰' or state != '槓'):
+                            state = tmpState
+                            cards = tmpCards
+                            nextAgent = i
+                        else :
+                            print ('No define state \'',tmpState,"\'")
+                            sys.exit()
+            
+            
+                if state == '胡':
+                    winAgent = nextAgent
+                    loseAgent = currentAgent
+                    break
+			            
+                if state == '吃' or state == '碰' or state == '槓':
+                    takeAgent = nextAgent            
+                    takeCards = cards                
+
+                    if state == '槓':
+                        newCard = self.pickCard(remainCard)
+                        ## if deck is empty it means no winner in this round
+                        if newCard == None :
+                            state = '流局'
+                            break
+                    else:
+                        #newCard = throwCard
+                        newCard = None
+
+                else:
+                    takeAgent = None
+                    takeCards = None
+                    newCard = self.pickCard(remainCard)
+                    ## if deck is empty it means no winner in this round
+                    if newCard == None :
+                        state = '流局'
+                        break
+
+                ## broadcast information
+                for i in range(4):
+                    agents[i].update(currentAgent,takeAgent,takeCards,throwCard)
+                currentAgent = nextAgent
+
+            if state == '胡' :
+                ###############################################################
+                if winAgent == self.playerNumber:
+                    scoreSum[cardIndex] += 1
+                #score
+                """
+                #print ('贏家 : ',winAgent)
+                #print ('放槍 : ',loseAgent)
+                score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,agents[winAgent].wind)
+                scoreBoard[winAgent] += score * 3
+                if score <= 25:
+                    for i in range(4):
+                        if i != winAgent :
+                            scoreBoard[i] -=score
+                else :
+                    scoreBoard[loseAgent] -= (score*3 -50)
+                    for i in range(4):
+                        if i != winAgent and i != loseAgent:
+                            scoreBoard[i] -= 25
+                """
+                ###############################################################
+                #return winAgent,loseAgent,self.scoreBoard
+            elif state == '自摸':
+                ###############################################################
+                if winAgent == self.playerNumber:
+                    scoreSum[cardIndex] += 1
+                #score
+                """
+                print (winAgent,'自摸',time)
+                score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,agents[winAgent].wind)
+                scoreBoard[winAgent] += score * 3
+                for i in range(4):
+                    if i != winAgent :
+                        scoreBoard[i] -=score
+                """
+                ###############################################################
+                #return winAgent,None,scoreBoard
+            #elif state == '流局' :
+                #print (state)
+                #return None,None,None
+            #else:
+                #assert 0==1
+
+        #########################################################
+
+            #scoreSum[cardIndex] += scoreBoard[self.playerNumber]
+            for i in range(cardTypeNum):
+                ucb[i] = scoreSum[i]/selectedTime[i] + math.sqrt(2*math.log(totalTime)/selectedTime[i])
+
+        avgScore = [0.0]*cardTypeNum
+        #print(scoreSum)
+        for i in range(cardTypeNum):
+            avgScore[i] = scoreSum[i]/selectedTime[i]
+        throwCard = cardType[avgScore.index(max(avgScore))]
+        self.handcard.remove(throwCard)
+        return throwCard
+        
+    def findRemainCard(self):
+        deck = []
+        for i in range(34):
+            deck.append([i]*4)
+        deck = sum(deck, [])
+        for card in self.cardOpened:
+            deck.remove(card)
+        for card in self.handcard:
+            deck.remove(card)
+        return deck
+
+    def pickCard(self, cards):
+        if len(cards) > 0:
+            return cards.pop()
+        else:
+            return None
+        
+    
+    def OneStep(self):
+        infos = self.xiangtingshu(self.handcard)
+        maxUtil = max([info[3] for info in infos]) #info[3]為有效牌總數，選擇最大的那個
+        throwCard = random.choice([info[0] for info in infos if info[3] == maxUtil])
+        self.handcard.remove(throwCard)
+        return throwCard
 
