@@ -4,7 +4,7 @@ from BasicDefinition import *
 from Agent import Agent
 from util import *
 import math
-from getScore import getScore
+from evalScore import evalScore
 ########################
 ###   Random Agent   ###
 ########################
@@ -225,28 +225,48 @@ class MCTSAgent(Agent):
             return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
         else:
             infos = self.xiangtingshu(self.handcard)
-            xiangtingNum = infos[0][1]
-            maxValue = max([info[4] for info in infos])
-            if xiangtingNum>3:
+            
+            if infos[0][1]>3:
                 return 'Throw' ,self.OneStep()
             else:
                 return 'Throw' , self.SearchScore() 
 
     def SearchScore(self):
         cardType = []
+
+        #從手牌選#######################################################
+        """
         for card in self.handcard:
             if card not in cardType:
                 cardType.append(card)
+        """
+        ####從向聽數最小的選
+        for case in self.xiangtingshu(self.handcard):
+            cardType.append(case[0])
+        ###############################################################
+
         cardTypeNum = len(cardType)
+        if cardTypeNum == 1:
+            self.handcard.remove(cardType[0])
+            return cardType[0]
         
         ucb = [0.0]*cardTypeNum
+
         selectedTime = [1.0]*cardTypeNum
         totalTime = cardTypeNum
         scoreSum = [0.0]*cardTypeNum
         repeat = 1000
         for time in range(repeat):
+            #print(ucb)
+            #挑ucb最大的###############################################################
+            
             maxUcb = max(ucb)
             cardIndex = random.choice([i for i in range(cardTypeNum) if ucb[i] == maxUcb])
+            
+            #隨機挑一張
+            #cardIndex = random.choice([i for i in range(cardTypeNum)])
+            ##########################################################################
+
             selectedTime[cardIndex] += 1
             totalTime += 1
             chosedCard = cardType[cardIndex]
@@ -364,9 +384,14 @@ class MCTSAgent(Agent):
                 currentAgent = nextAgent
 
             if state == '胡' :
+                ###############################################################
+                if winAgent == self.playerNumber:
+                    scoreSum[cardIndex] += 1
+                #score
+                """
                 #print ('贏家 : ',winAgent)
                 #print ('放槍 : ',loseAgent)
-                score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],agents[winAgent].wind)
+                score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,agents[winAgent].wind)
                 scoreBoard[winAgent] += score * 3
                 if score <= 25:
                     for i in range(4):
@@ -377,16 +402,23 @@ class MCTSAgent(Agent):
                     for i in range(4):
                         if i != winAgent and i != loseAgent:
                             scoreBoard[i] -= 25
-
+                """
+                ###############################################################
                 #return winAgent,loseAgent,self.scoreBoard
             elif state == '自摸':
-                print (winAgent,'自摸')
-                score = getScore(winAgent,cards[0]+cards[1],cards[0],cards[1],agents[winAgent].wind)
+                ###############################################################
+                if winAgent == self.playerNumber:
+                    scoreSum[cardIndex] += 1
+                #score
+                """
+                print (winAgent,'自摸',time)
+                score = evalScore(cards[0]+cards[1],cards[0],cards[1],winAgent,agents[winAgent].wind)
                 scoreBoard[winAgent] += score * 3
                 for i in range(4):
                     if i != winAgent :
                         scoreBoard[i] -=score
-
+                """
+                ###############################################################
                 #return winAgent,None,scoreBoard
             #elif state == '流局' :
                 #print (state)
@@ -396,11 +428,12 @@ class MCTSAgent(Agent):
 
         #########################################################
 
-            scoreSum[cardIndex] += scoreBoard[self.playerNumber]
+            #scoreSum[cardIndex] += scoreBoard[self.playerNumber]
             for i in range(cardTypeNum):
                 ucb[i] = scoreSum[i]/selectedTime[i] + math.sqrt(2*math.log(totalTime)/selectedTime[i])
 
         avgScore = [0.0]*cardTypeNum
+        #print(scoreSum)
         for i in range(cardTypeNum):
             avgScore[i] = scoreSum[i]/selectedTime[i]
         throwCard = cardType[avgScore.index(max(avgScore))]
