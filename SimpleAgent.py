@@ -175,7 +175,7 @@ class ValueAgent(Agent):
 
         assert result or cardCombination == None
         if result:
-            return '自摸',cardCombination+self.cardsOnBoard[self.playerNumber]
+            return '自摸',[cardCombination,self.cardsOnBoard[self.playerNumber]]
         else:
             return 'Throw' , self.OneStepwithScore() 
 

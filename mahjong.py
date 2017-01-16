@@ -647,6 +647,10 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,cardsOnboard_original = Han
         return 0
     else:
         finalvalue = sum(valueList)/len(valueList)
+    if len(valueList) ==0 :
+        return 0
+    
+    finalvalue = sum(valueList)/len(valueList)
     return finalvalue
 
 
