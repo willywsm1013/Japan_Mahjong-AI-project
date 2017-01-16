@@ -631,8 +631,12 @@ def Eval_WinPattern(xiangtingshu,totalcards_in_group,hand,cardsOnboard = Hand_in
         #print ('value= ' ,value )
         #print ()
     #print ("valueList",valueList)
-    finalvalue = sum(valueList)/len(valueList)
-    return finalvalue
+    if valueList:
+        finalvalue = sum(valueList)/len(valueList)
+        return finalvalue
+    else
+        return 0
+    
 
 
 
