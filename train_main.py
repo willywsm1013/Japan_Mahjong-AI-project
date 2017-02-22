@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import time as timer
 import math
 import argparse
-
+from collections import namedtuple
 
 
 ##########################
@@ -16,20 +16,22 @@ import argparse
 ##########################
 parser = argparse.ArgumentParser()
 
-#----------------------
-TrainOrTest = parser.add_mutually_exclusive_group(required = True)
-TrainOrTest.add_argument('-train', action='store_true', help = "open training mode")
-TrainOrTest.add_argument('-test', action='store_true', help = "open testing mode")
-TrainOrTest.add_argument('-pw','--print_weight', action='store_true', help = 'print weight of learningAgent')
-#----------------------
+# action
+parser.add_argument('-m','--mode',choices=['train','test'])
+
+parser.add_argument('-pw','--print_weight', action='store_true', help = 'print weight of learningAgent')
+# directory
+parser.add_argument('--load_dir',default='')
+# training options
+parser.add_argument('-dis','--discount',type=float,default=1,help='setting discount[1]')
+parser.add_argument('-lr','--learning_rate',type=float,default=1e-5,help='setting learning rate[1e-5]')
+parser.add_argument('-ep','--epsilon',type=float,default=0.5,help='setting epsilon')
+parser.add_argument('-dlr','--decrease_learning_rate',action='store_true',help='decrease learning rate')
+parser.add_argument('-dep','--decrease_epsilon',action='store_true',help='decrease epsilon')
 
 parser.add_argument('-r',"--repeat", type=float, default = 1, help = "training or testing times[1]")
 parser.add_argument('-v','--verbose',action='store_true',help='print information')
 parser.add_argument('-ui','--UI',action='store_true',help='open user interface')
-parser.add_argument('-lr','--learning_rate',type=float,default=1e-5,help='setting learning rate[1e-5]')
-parser.add_argument('-dlr','--decrease_learning_rate',action='store_true',help='decrease learning rate')
-parser.add_argument('-ep','--epsilon',type=float,default=0.5,help='setting epsilon')
-parser.add_argument('-dep','--decrease_epsilon',action='store_true',help='decrease epsilon')
 parser.add_argument('-pq','--plot_q',action='store_true',help='plot Q value')
 parser.add_argument('-e','--enemy',default='random',choices=['random','onestep','selflearn'],help='enemy type[random]')
 parser.add_argument('-le','--load_enemy',default=None,help='enemy weights file')
@@ -40,8 +42,6 @@ args = parser.parse_args()
 Verbose = args.verbose
 UI = args.UI
 
-train = args.train
-test = args.test
 
 repeat = args.repeat
 print_weight = args.print_weight
@@ -59,10 +59,15 @@ rounds = 1000
 
 pickle = './save/scorelearn/scoreLearning（暗刻）'
 
+##  create params  ##
+params_dict = vars(args)
+params_class = namedtuple('params_class', params_dict.keys())
+params = params_class(**params_dict)
+
 #########################
 ###   program start   ###
 #########################
-if not train and not test and print_weight:
+if print_weight:
     agent = SelfLearningAgent(0,pickle_name=pickle)
     sys.exit()
 
@@ -110,7 +115,7 @@ def testing(table,playerNumber,rounds):
     for i in range(3):
         testTable.addAgent(getEnemy(i,'random'))
     
-    agent = ScoreLearningAgent(3,mode = 'test')
+    agent = ScoreLearningAgent(3,params,mode = 'test')
     agent.weights = table.agents[playerNumber].weights.copy() 
     testTable.addAgent(agent)
     win = [0]*4
@@ -141,26 +146,22 @@ try :
     for i in range(3):
         table.addAgent(getEnemy(i,enemyType))
     
-    if train :
-        table.addAgent(ScoreLearningAgent(player_number = 3,
-                                         discount = 0.8,
-                                         epsilon = epsilon,
-                                         alpha = learningRate,
-                                         mode = 'train',
-                                         pickle_name=pickle,
-                                         lr_decay_fn = exponentialDecay
-                                        ))
+    if args.mode == 'train' :
+        table.addAgent(SelfLearningAgent(3,params,mode = 'train'))
+        '''
         testWin,testLose,testScores = testing(table,3,rounds)
         if target == 'win_rate':
             keep = testWin
         elif target == 'average_score':
             keep = testScores[3]
         keeps.append(keep)
-    elif test:
-        table.addAgent(ScoreLearningAgent(3,mode = 'test',pickle_name=pickle))
+        '''
+    elif args.mode == 'test' :
+        table.addAgent(ScoreLearningAgent(3,params,mode= 'test'))
     else :
         print ('please use -train or -test flags')
         sys.exit()
+    
     for time in range(int(repeat)):
         Round += 1.0
         if Verbose:
@@ -190,7 +191,7 @@ try :
             loseRecord[loser]+=1
         if Verbose:
             print ('**************************')
-        if train :            
+        if args.mode == 'train' :            
                         
             if (time+1) % 10000 == 0:
                 table.gameEnd()

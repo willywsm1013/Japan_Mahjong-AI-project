@@ -290,6 +290,7 @@ class Agent :
                 case.append(valuelist[i])
         #print ('xiangtingshuInfo',xiangtingshuInfo)
         return xiangtingshuInfo
+    
     ######################################
     ###   一局遊戲結束呼叫的function   ###
     ###   給learning Agent用的         ###
