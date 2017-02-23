@@ -23,7 +23,7 @@ parser.add_argument('-pw','--print_weight', action='store_true', help = 'print w
 # directory
 parser.add_argument('--load_dir',default='')
 # training options
-parser.add_argument('-dis','--discount',type=float,default=1,help='setting discount[1]')
+parser.add_argument('-dis','--discount',type=float,default=0.8,help='setting discount[0.8]')
 parser.add_argument('-lr','--learning_rate',type=float,default=1e-5,help='setting learning rate[1e-5]')
 parser.add_argument('-ep','--epsilon',type=float,default=0.5,help='setting epsilon')
 parser.add_argument('-dlr','--decrease_learning_rate',action='store_true',help='decrease learning rate')
@@ -147,15 +147,13 @@ try :
         table.addAgent(getEnemy(i,enemyType))
     
     if args.mode == 'train' :
-        table.addAgent(SelfLearningAgent(3,params,mode = 'train'))
-        '''
+        table.addAgent(ScoreLearningAgent(3,params,mode = 'train'))
         testWin,testLose,testScores = testing(table,3,rounds)
         if target == 'win_rate':
             keep = testWin
         elif target == 'average_score':
             keep = testScores[3]
         keeps.append(keep)
-        '''
     elif args.mode == 'test' :
         table.addAgent(ScoreLearningAgent(3,params,mode= 'test'))
     else :

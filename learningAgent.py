@@ -56,9 +56,15 @@ class QLearningAgent(Agent):
         
         self.updateQ(terminate = False,card = card, agent=agentNum)
         ### 取得legal actions
+        prop = {}
+        prop['terminate'] = False
+        prop['mode'] = 'take'
+        prop['card'] = card
+        prop['agent'] = agentNum
+        '''
         Property = namedtuple('Property',['terminate','mode','card','agent'])
         prop = Property(False,'take',card,agentNum)
-
+        '''
         currentState = self.getState(prop)
         legalActions = self.getLegalActions(currentState)
         
@@ -93,10 +99,13 @@ class QLearningAgent(Agent):
     ###   用Q value決定要採取的action   ###
     #######################################
     def takeActionByQ(self):
-
+        prop = {}
+        prop['terminate'] = False
+        prop['mode'] = 'throw'
+        '''
         Property = namedtuple('Property',['terminate','mode'])
         prop = Property(False,'throw')
-
+        '''
         currentState = self.getState(prop)
         legalActions = self.getLegalActions(currentState) 
         
@@ -117,8 +126,13 @@ class QLearningAgent(Agent):
         return throw
     
     def getState(self,prop):
+        state = {}
+        state['content'] = self.getContent()
+        state['property'] = prop
+        '''
         State = namedtuple('State',['content','property'])
         state = State(self.getContent(),prop)
+        '''
         return state
 
     ###############################
@@ -127,12 +141,13 @@ class QLearningAgent(Agent):
     ###   (2)決定吃碰槓的時候   ###
     ###############################
     def getLegalActions(self,state):
-        prop = state.property
-        content = state.content
+        #print (state)
+        prop = state['property']
+        content = state['content']
        
-        mode = prop.mode
-        terminate = prop.terminate
-        handcards = content.handcards
+        mode = prop['mode']
+        terminate = prop['terminate']
+        handcards = content['handcards']
 
         if terminate:
             return (None,)
@@ -141,8 +156,8 @@ class QLearningAgent(Agent):
             return tuple(set(handcards))
         ### legal action : ((可能湊成的組合),不在手上的那張牌)
         elif mode == 'take':
-            card = prop.card
-            agent = prop.agent
+            card = prop['card']
+            agent = prop['agent']
             
             assert card !=None
             legalActions = [None]
@@ -243,13 +258,16 @@ Weight :
                 reward = self.getReward(terminate)
             state = self.lastState
             action = self.lastAction
-
+            
+            prop = {}
             if card == None:
-                Property = namedtuple('Property',['terminate','mode'])
-                prop = Property(terminate,'throw')
+                prop['terminate'] = terminate
+                prop['mode'] = 'throw'
             else:
-                Property = namedtuple('Property',['terminate','mode','card','agent'])
-                prop = Property(terminate,'take',card,agent)
+                prop['terminate'] = terminate
+                prop['mode'] = 'throw'
+                prop['card'] = card
+                prop['agent'] = agent
 
             nextState = self.getState(prop)
             legalActions = self.getLegalActions(nextState)
@@ -263,7 +281,7 @@ Weight :
                 self.weights[key] = self.weights[key] + self.lr*difference*features[key]
     
     def save(self,pickle_name):
-        if self.train :
+        if self.mode == 'train' :
             print ('saving data to ',pickle_name)
             f = open(pickle_name, 'wb')
             cPickle.dump(self.weights, f, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -336,20 +354,23 @@ class SelfLearningAgent(WeightLearningAgent):
         return 0
      
     def getContent(self):
+        content = {}
+        '''
         Content = namedtuple('Content',['handcards','cardsOnBoard','cardsUnSeen'])
-        
-        handcards = tuple(self.handcard[:]) 
-        cardsOnBoard = tuple(self.cardsOnBoard[self.playerNumber][:])
-        cardsUnSeen = tuple([ 4 - self.cardOpened.count(i) - self.handcard.count(i) for i in range(34)])
-        
         content = Content(handcards,cardsOnBoard,cardsUnSeen)
+        '''
+       
+        content['handcards'] = tuple(self.handcard[:]) 
+        content['cardsOnBoard'] = tuple(self.cardsOnBoard[self.playerNumber][:])
+        content['cardsUnSeen'] = tuple([ 4 - self.cardOpened.count(i) - self.handcard.count(i) for i in range(34)])
+        
         return content
     
     def getFeatures(self,state,action):   
         feats = util.Counter()
-        content = state.content
-        handcard = list(content.handcards)
-        cardsOnBoard = list(content.cardsOnBoard)
+        content = state['content']
+        handcard = list(content['handcards'])
+        cardsOnBoard = list(content['cardsOnBoard'])
         
         if isinstance(action,tuple):
             handcard.append(action[1])
@@ -364,7 +385,7 @@ class SelfLearningAgent(WeightLearningAgent):
             raise Exception
         
         handSet = set(handcard)
-        cardsUnSeen  = content.cardsUnSeen
+        cardsUnSeen  = content['cardsUnSeen']
 
         ###############################
         ###   從下面開始找feature   ###
@@ -551,23 +572,26 @@ class ScoreLearningAgent(SelfLearningAgent):
         return 0
      
     def getContent(self):
+        content = {}
+        '''
         Content = namedtuple('Content',['handcards','cardsOnBoard','cardsUnSeen','cardOpened'])
-        
-        handcards = tuple(self.handcard[:]) 
-        cardsOnBoard = tuple(self.cardsOnBoard[self.playerNumber][:])
-        cardsUnSeen = tuple([ 4 - self.cardOpened.count(i) - self.handcard.count(i) for i in range(34)])
-        cardOpened = tuple(self.cardOpened[:])
-        
         content = Content(handcards,cardsOnBoard,cardsUnSeen,cardOpened)
+        '''
+        
+        content['handcards'] = tuple(self.handcard[:]) 
+        content['cardsOnBoard'] = tuple(self.cardsOnBoard[self.playerNumber][:])
+        content['cardsUnSeen'] = tuple([ 4 - self.cardOpened.count(i) - self.handcard.count(i) for i in range(34)])
+        content['cardOpened'] = tuple(self.cardOpened[:])
+        
         return content
     
     def getFeatures(self,state,action):
 
         feats = SelfLearningAgent.getFeatures(self,state,action)
         
-        content = state.content
-        handcard = list(content.handcards)
-        cardsOnBoard = list(content.cardsOnBoard)
+        content = state['content']
+        handcard = list(content['handcards'])
+        cardsOnBoard = list(content['cardsOnBoard'])
         
         if isinstance(action,tuple):
             handcard.append(action[1])
@@ -582,7 +606,7 @@ class ScoreLearningAgent(SelfLearningAgent):
             raise Exception
         
         handSet = set(handcard)
-        cardsUnSeen  = content.cardsUnSeen
+        cardsUnSeen  = content['cardsUnSeen']
         enemyCardsOnBoard = (content.cardOpened[i] for i in range(4) if i != self.playerNumber )
         
         ###############################
