@@ -25,7 +25,13 @@ class QLearningAgent(Agent):
         
         if params.load_dir != None:
             self.load(params.load_dir)
-            
+        
+        self.params = params
+    
+    def setMode(self,mode):
+        assert mode == 'test' or mode == 'train'
+        self.mode = mode
+    
     def reset(self):
         Agent.reset(self)
         self.lastState = None
@@ -113,6 +119,7 @@ class QLearningAgent(Agent):
             throw = random.choice(legalActions)
         else :
             qValues= self.getQValue(state=currentState,actions = legalActions)
+            #print ('qValues : ',qValues)
             maxQ = max(qValues)
             self.recordQ.append(maxQ)
             maxActions = [ legalActions[i] for i in range(len(legalActions)) if qValues[i] == maxQ]
@@ -208,7 +215,7 @@ class QLearningAgent(Agent):
     def setLearningTarget(self): 
         raise NotImplementedError
             
-    def updateQ(self,terminate,reward = 0):
+    def updateQ(self,terminate,reward = None,card = None, agent=None):
         raise NotImplementedError
         
     def getReward(self):
@@ -260,10 +267,10 @@ Weight :
             action = self.lastAction
             
             prop = {}
-            if card == None:
+            if card == None:  ## 丟牌的時候
                 prop['terminate'] = terminate
                 prop['mode'] = 'throw'
-            else:
+            else:             ## 拿牌的時候（判斷吃碰槓）
                 prop['terminate'] = terminate
                 prop['mode'] = 'throw'
                 prop['card'] = card
@@ -272,9 +279,16 @@ Weight :
             nextState = self.getState(prop)
             legalActions = self.getLegalActions(nextState)
             #print (state,action,nextState)
+           
+            if not terminate:
+                qValues = self.getQValue(nextState,legalActions)
+                maxQ = max(qValues)
+            else:
+                assert legalActions == (None,)
+                state = nextState
+                action = legalActions[0]
+                maxQ = 0
             
-            qValues = self.getQValue(nextState,legalActions)
-            maxQ = max(qValues)
             difference = (reward + self.discount*maxQ) - self.getQValue(state,[action])[0]
             features = self.getFeatures(state,action)
             for key in features:
@@ -348,6 +362,7 @@ class SelfLearningAgent(WeightLearningAgent):
         else :
             score = 0
         
+        self.updateQ(terminate = False)
         self.updateQ(terminate = True, reward = score)
 
     def getReward(self,terminate):

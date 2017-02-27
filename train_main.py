@@ -1,6 +1,8 @@
 from Table import Table
 from SimpleAgent import *
 from learningAgent import *
+from NNlearningAgent import NNSelfLearningAgent 
+from model import FullyConnectedModel 
 import sys,threading
 import operator
 from six.moves import cPickle
@@ -21,13 +23,20 @@ parser.add_argument('-m','--mode',choices=['train','test'])
 
 parser.add_argument('-pw','--print_weight', action='store_true', help = 'print weight of learningAgent')
 # directory
-parser.add_argument('--load_dir',default='')
+parser.add_argument('--load_dir',default = None)
+parser.add_argument('--save_dir',default = None)
 # training options
 parser.add_argument('-dis','--discount',type=float,default=0.8,help='setting discount[0.8]')
 parser.add_argument('-lr','--learning_rate',type=float,default=1e-5,help='setting learning rate[1e-5]')
 parser.add_argument('-ep','--epsilon',type=float,default=0.5,help='setting epsilon')
 parser.add_argument('-dlr','--decrease_learning_rate',action='store_true',help='decrease learning rate')
 parser.add_argument('-dep','--decrease_epsilon',action='store_true',help='decrease epsilon')
+
+# for NN
+parser.add_argument('-mn','--model_name',default='model',help='setting model name[model]')
+parser.add_argument('-bs','--batch_size',type=int,default=32,help='setting batch size[32]')
+parser.add_argument('-dsms','--data_set_max_size',type=int,default=100000,help='setting max size of data set[100000]')
+parser.add_argument('-dsn','--data_set_name',default='data set',help='setting data set name[data set]')
 
 parser.add_argument('-r',"--repeat", type=float, default = 1, help = "training or testing times[1]")
 parser.add_argument('-v','--verbose',action='store_true',help='print information')
@@ -115,8 +124,8 @@ def testing(table,playerNumber,rounds):
     for i in range(3):
         testTable.addAgent(getEnemy(i,'random'))
     
-    agent = ScoreLearningAgent(3,params,mode = 'test')
-    agent.weights = table.agents[playerNumber].weights.copy() 
+    agent = table.agents[playerNumber]
+    agent.setMode('test')
     testTable.addAgent(agent)
     win = [0]*4
     lose = [0]*4
@@ -137,6 +146,7 @@ def testing(table,playerNumber,rounds):
     print ('testing lose games : ',lose[playerNumber])
     print ('testing scores : ',scores)
 
+    agent.setMode('train')
     return win[playerNumber],lose[playerNumber],scores
 
 keeps = []
@@ -146,8 +156,9 @@ try :
     for i in range(3):
         table.addAgent(getEnemy(i,enemyType))
     
+    model = FullyConnectedModel(params)
     if args.mode == 'train' :
-        table.addAgent(ScoreLearningAgent(3,params,mode = 'train'))
+        table.addAgent(NNSelfLearningAgent(3,params,mode = 'train',model = model))
         testWin,testLose,testScores = testing(table,3,rounds)
         if target == 'win_rate':
             keep = testWin
@@ -155,7 +166,7 @@ try :
             keep = testScores[3]
         keeps.append(keep)
     elif args.mode == 'test' :
-        table.addAgent(ScoreLearningAgent(3,params,mode= 'test'))
+        table.addAgent(NNSelfLearningAgent(3,params,mode= 'test',model = model))
     else :
         print ('please use -train or -test flags')
         sys.exit()
